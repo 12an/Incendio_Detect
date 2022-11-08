@@ -1,0 +1,9 @@
+opencv-4.6.0
+opencv_python-4.6.0.66
+geos-3.8.0
+pillow-9.2.0
+pyside6-6.2.2.1
+shapely-1.7.1
+tk-8.6.12
+matplotlib-3.5.3-
+scikit-learn-1.0.2
