@@ -26,7 +26,7 @@
     <enum>QTabWidget::Triangular</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -70,7 +70,8 @@
       <string>Anterior Cordenada</string>
      </property>
      <property name="icon">
-      <iconset theme="video-x-generic"/>
+      <iconset theme="video-x-generic">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
     <widget class="QWidget" name="gridLayoutWidget">
@@ -82,7 +83,7 @@
        <height>531</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="gridLayout"/>
+     <layout class="QGridLayout" name="web_mapa"/>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
@@ -213,7 +214,7 @@
       <string>Detalles Incendio</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="label_CATEGORIA">
      <property name="geometry">
       <rect>
        <x>440</x>
@@ -226,7 +227,7 @@
       <string>Categoria:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="label_CORDENADAS_ORIGEN">
      <property name="geometry">
       <rect>
        <x>440</x>
@@ -239,7 +240,7 @@
       <string>Coordenadas Origen:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="label_FECHA_INICIO">
      <property name="geometry">
       <rect>
        <x>440</x>
@@ -252,7 +253,7 @@
       <string>Fecha Inicio:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_5">
+    <widget class="QLabel" name="label_ESTADO">
      <property name="geometry">
       <rect>
        <x>440</x>
@@ -265,7 +266,7 @@
       <string>Estado:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_6">
+    <widget class="QLabel" name="label_ULTIMA_ACTUALIZACIONJ">
      <property name="geometry">
       <rect>
        <x>440</x>
@@ -278,7 +279,7 @@
       <string>Ultima Actualizacion:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_7">
+    <widget class="QLabel" name="label_categoria">
      <property name="geometry">
       <rect>
        <x>670</x>
@@ -291,7 +292,7 @@
       <string>Cat 5</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_8">
+    <widget class="QLabel" name="label_cordenadas_origen">
      <property name="geometry">
       <rect>
        <x>670</x>
@@ -304,7 +305,7 @@
       <string>18.539573, -69.911945</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_9">
+    <widget class="QLabel" name="label_estado">
      <property name="geometry">
       <rect>
        <x>670</x>
@@ -317,7 +318,7 @@
       <string>Activo</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_10">
+    <widget class="QLabel" name="label_fecha_inicio">
      <property name="geometry">
       <rect>
        <x>670</x>
@@ -330,7 +331,7 @@
       <string>8/5/2022</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_11">
+    <widget class="QLabel" name="label_ultima_actualizacion">
      <property name="geometry">
       <rect>
        <x>670</x>

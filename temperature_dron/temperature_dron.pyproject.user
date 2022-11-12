@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 8.0.1, 2022-11-07T22:07:27. -->
+<!-- Written by QtCreator 8.0.1, 2022-11-11T21:26:43. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -140,15 +140,15 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">widget.py</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/temperature_dron/widget.py</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/temperature_dron/widget.py</value>
-    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\temperature_dron\widget.py</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">ControlModel.py2</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/ControlModel.py</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/ControlModel.py</value>
+    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\GitHub\Incendio_Detect\temperature_dron\ControlModel.py</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/temperature_dron</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron</value>
    </valuemap>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.RunConfiguration.1">
     <value type="bool" key="Analyzer.Perf.Settings.UseGlobalSettings">true</value>
@@ -157,15 +157,15 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">ControlModel.py</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/temperature_dron/ControlModel.py</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/temperature_dron/ControlModel.py</value>
-    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\temperature_dron\ControlModel.py</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">DataModel.py2</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/DataModel.py</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/DataModel.py</value>
+    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\GitHub\Incendio_Detect\temperature_dron\DataModel.py</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/temperature_dron</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron</value>
    </valuemap>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.RunConfiguration.2">
     <value type="bool" key="Analyzer.Perf.Settings.UseGlobalSettings">true</value>
@@ -174,15 +174,15 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">DataModel.py</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/temperature_dron/DataModel.py</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/temperature_dron/DataModel.py</value>
-    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\temperature_dron\DataModel.py</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">widget.py2</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/widget.py</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/widget.py</value>
+    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\GitHub\Incendio_Detect\temperature_dron\widget.py</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/temperature_dron</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron</value>
    </valuemap>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.RunConfiguration.3">
     <value type="bool" key="Analyzer.Perf.Settings.UseGlobalSettings">true</value>
@@ -191,15 +191,15 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">ViewControl.py</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/temperature_dron/ViewControl.py</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/temperature_dron/ViewControl.py</value>
-    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\temperature_dron\ViewControl.py</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">ViewControl.py2</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/ViewControl.py</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron/ViewControl.py</value>
+    <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\2233a\Documents\GitHub\Incendio_Detect\temperature_dron\ViewControl.py</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/temperature_dron</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/2233a/Documents/GitHub/Incendio_Detect/temperature_dron</value>
    </valuemap>
    <value type="qlonglong" key="ProjectExplorer.Target.RunConfigurationCount">4</value>
   </valuemap>

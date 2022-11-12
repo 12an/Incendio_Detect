@@ -5,11 +5,61 @@ from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
 from  TransformFotos import LuminosidadFotos, FiltroFotos, CalibrateFoto, Segmentacion
 from widget import MplCanvas
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 
-class DataAnalisis:
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+
+class PuntosIncendioReferenciaDron:
+    def __init__(self, cordenada_dron, incendio_seleccion_ij):
+        self.cordenada_dron = cordenada_dron
+        self.altura = altura
+        self.incendio_seleccion_ij = incendio_seleccion_ij
+    def get3d_2d(self):
+        # z es constante a la altura de la imagen
+        for i,j,temp in zip(self.incendio_seleccion_ij):
+            vector_pixel_2d_posicion = np.matrix([[i], [j], [self.altura]])
+            foto_3d_from_2d = np.linalg.solv(self.newcameramtx, vector_pixel_2d_posicion)
+            self.foto_3d_from_2d[i][j][0] = foto_3d_from_2d[0]
+            self.foto_3d_from_2d[i][j][1] = foto_3d_from_2d[1]
+            self.foto_3d_from_2d[i][j][2] = foto_3d_from_2d[2]
+
+class OrigenReferenciaGlobal(PuntosIncendioReferenciaDron):
+    def __init__(self, cordenada_referencia_global):
+        self.cordenada_referencia_global = cordenada_referencia_global
+
+
+class IncendioProyeccionOrigen(OrigenReferenciaGlobal):
     def __init__(self):
-        self.area_total = 0
-        self.area_color = list()
+        pass
+
+
+class IncendioData(IncendioProyeccionOrigen):
+    def __init__(self,foto_referencia,
+                 cordenada_origen_incendio,
+                 categoria,
+                 fecha_deteccion,
+                 ultima_actualizacion,
+                 observaciones,
+                 intensidad,
+                 *arg,
+                 **args):
+        self.foto_referencia = foto_referencia
+        self.cordenada_origen = cordenada_origen_incendio
+        self.categoria = categoria
+        self.fecha_deteccion = fecha_deteccion
+        self.ultima_actualizacion = ultima_actualizacion
+        self.observaciones = observaciones
+        self.intensidad = intensidad
+
+
 class CameraData:
     def __init__(self,
                  ret,
@@ -22,76 +72,6 @@ class CameraData:
         self.dist = dist
         self.rvecs = rvecs
         self.tvecs = tvecs
-class Foto:
-    def __init__(self,
-                 foto,
-                 id_foto,
-                 coordenadas,
-                 altura_foto_tomada,
-                 origen_coordenada,
-                 rotacion,
-                 *arg,
-                 **args):
-        self.altura_foto_tomada = altura_foto_tomada
-        self.coordenadas = coordenadas
-        self.rotacion = rotacion
-        self.origen_coordenada = origen_coordenada
-        self.id_foto = id_foto
-        self.area_color = dict()
-        self.foto_ = foto
-        self.height  = foto.shape[0]
-        self.width  = foto.shape[1]
-
-class FotoTransformData(Foto,
-                        LuminosidadFotos,
-                        FiltroFotos,
-                        CalibrateFoto,
-                        Segmentacion):
-
-    def __init__(self, *arg,**args):
-        Foto.__init__(self, *arg,**args)
-        LuminosidadFotos.__init__(self, self.foto_)
-
-        self.index = 0
-        FiltroFotos.__init__(self, self.foto_normalizada)
-        args["foto"] = self.foto_norm_bilate
-        args["height"] = self.height
-        args["width"] = self.width
-        CalibrateFoto.__init__(self, *[], **args)
-        args["foto_calibrada"] = self.foto_calibrada_recortada
-        args["distancia"] = 2
-        args["min_group_pixel_size"] = 10
-        Segmentacion.__init__(self,*[], **args )
-
-        self.histograma_plot = MplCanvas(self, width=5, height=4, dpi=100)
-        self.histograma_norma_bilat_plot = MplCanvas(self, width=5, height=4, dpi=100)
-        self.histograma_plot.axes.plot(self.histo_bruto)
-        self.histograma_norma_bilat_plot.axes.plot(self.histo_norma_bilater)
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.index<4:
-            if self.index==0:
-                self.index += 1
-                self.calibrate()
-                return self.foto_normalizada, self.foto_calibrada
-            if self.index==1:
-                self.index += 1
-                return (self.foto,
-                        self.foto_norm_bilate,
-                        self.histograma_plot,
-                        self.histograma_norma_bilat_plot)
-            if self.index==2:
-                self.segmentacion()
-                self.index += 1
-                return self.foto_calibrada_recortada_segmentada
-            if self.index==3:
-                self.index += 1
-                return self.foto,
-
-    def reset_index(self):
-        self.index = 0
 
 
 class FotoChesspatternData():
@@ -113,21 +93,13 @@ class DatosControl():
                   ):
         print("inicializando DatosControl ")
         self.path_directory = path
-        self.imagenes_analisis = list()
         self.imagenes_chesspattern = list()
         self.carpeta_fotos_analisis = carpeta_fotos_analisis
         self.carpeta_fotos_chesspattern = carpeta_fotos_chesspattern
         self.instriscic_pkl = instriscic_pkl
         self.carpeta_data = carpeta_data
         self.carpeta_gui = carpeta_gui
-        self.total_fotos_analisis = 0
-        self.total_fotos_chesspattern = 0
         self.camera_instriscic = list()
-        self.ret = []
-        self.mtx = []
-        self.dist = []
-        self.rvecs = []
-        self.tvecs = []
         self.read_instricic_camera()
     def save_(func):
         def inner(self, *arg,**args):
@@ -148,25 +120,10 @@ class DatosControl():
                     coordenada_mix = name_foto[name_foto.find("-") + 1: name_foto.find(".")]
                     coordenada_imagen = {"x":coordenada_mix[coordenada_mix.find("x") + 1 :coordenada_mix.find("y")],
                                          "y":coordenada_mix[coordenada_mix.find("x") + 1 :coordenada_mix.find("y")]}
-                    self.imagenes_analisis.append(FotoTransformData(*[], **{"foto" : imagen,
-                                                                      "id_foto" : id_imagen,
-                                                                      "coordenadas" : coordenada_imagen,
-                                                                      "origen_coordenada" : 0,
-                                                                      "altura_foto_tomada" : altura_imagen,
-                                                                      "rotacion" : 0,
-                                                                      "ret" : self.ret,
-                                                                      "mtx" : self.mtx,
-                                                                      "dist" : self.dist,
-                                                                      "rvecs ": self.rvecs,
-                                                                      "tvecs" : self.tvecs}
-                                                                      )
-                                                  )
-                    self.total_fotos_analisis += 1
                 if(tipo_imagen==2):
                     self.imagenes_chesspattern.append(
                         FotoChesspatternData(id_imagen, imagen)
                                                     )
-                    self.total_fotos_chesspattern += 1
         return inner
 
     @open_
