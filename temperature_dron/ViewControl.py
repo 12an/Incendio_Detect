@@ -15,25 +15,39 @@ from widget import Widget
 #     pyside2-uic form.ui -o ui_form.py
 from ui_form import Ui_main_qwidget
 
+
+class ImagenLabel:
+    def __init__(self, name):
+        self.name = name
+        self.imagen_qlabel = QLabel()
+
+
 class ViewControl(Widget):
     def __init__(self, cantidad_imagenes, parent=None):
         super().__init__(parent)
         self.ui = Ui_main_qwidget()
         self.ui.setupUi(self)
         # eventos
-        self.ui.anterior_mapa_1.clicked.connect(self.event_anterior_mapa_1)
-        self.ui.siguiente_mapa_1.clicked.connect(self.event_siguiente_mapa_1)
-        self.ui.anterior_3dmapa_2.clicked.connect(self.event_anterior_3dmapa_2)
-        self.ui.siguiente_3dmapa_2.clicked.connect(self.event_siguiente_3dmapa_2)
-        self.ui.anterior_detalles_3.clicked.connect(self.event_anterior_detalles_3)
-        self.ui.siguiente_detalles_3.clicked.connect(self.event_siguiente_detalles_3)
+        self.ui.ArmDisarmButton_dron.clicked.connect(self.ArmDisarmButton_dron_evento)
+        self.ui.StartMisionButton_dron.clicked.connect(self.StartMisionButton_dron_evento)
+        self.ui.RTLButton_dron.clicked.connect(self.RTLButton_dron_evento)
+        self.ui.ManualAutoButton_dron.clicked.connect(self.ManualAutoButton_dron_evento)
+        self.ui.AnteriorCordenadaBotton_mapa.clicked.connect(self.AnteriorCordenadaBotton_mapa_evento)
+        self.ui.SiguienteCordenadaBotton_mapa.clicked.connect(self.SiguienteCordenadaBotton_mapa_evento)
+        self.ui.GenerarReporteBotton_detalles.clicked.connect(self.GenerarReporteBotton_detalles_evento)
+        self.ui.SiguienteCordenadaBotton_detalles.clicked.connect(self.SiguienteCordenadaBotton_detalles_evento)
+        self.ui.AnteriorCordenadaBotton_detalles.clicked.connect(self.AnteriorCordenadaBotton_detalles_evento)
         # imagen 3d
         self.plot_layout = list()
         self.plot_layout.append(self.ui.mapa_3d)
-        # imagen tab 3
-        self.label_image = list()
-        self.label_image.append(QLabel())
-        self.ui.foto_fuego.addWidget(self.label_image[0],
+        self.plot_layout.append(self.ui.mapa_2d)
+        # imagen tab 3 detalles
+        self.imagenes_detalles = {"0":ImagenLabel("Foto_Camara"),
+                                  "1":ImagenLabel("ImagenProcesada")}
+        self.ui.Foto_Camara.addWidget(self.imagenes_detalles.get("0"),
+                                  1,
+                                  1)
+        self.ui.ImagenProcesada.addWidget(self.imagenes_detalles.get("1"),
                                   1,
                                   1)
         #mapa
@@ -77,22 +91,32 @@ class ViewControl(Widget):
                                                  1,
                                                  1)
 
-    def event_anterior_mapa_1(self):
+    def ArmDisarmButton_dron_evento(self):
         pass
 
-    def event_siguiente_mapa_1(self):
+    def StartMisionButton_dron_evento(self):
         pass
 
-    def event_anterior_3dmapa_2(self):
+    def RTLButton_dron_evento(self):
         pass
 
-    def event_siguiente_3dmapa_2(self):
+    def ManualAutoButton_dron_evento(self):
         pass
 
-    def event_anterior_detalles_3(self):
+    def AnteriorCordenadaBotton_mapa_evento(self):
         pass
 
-    def event_siguiente_detalles_3(self):
+    def SiguienteCordenadaBotton_mapa_evento(self):
+        pass
+
+
+    def GenerarReporteBotton_detalles_evento(self):
+        pass
+
+    def SiguienteCordenadaBotton_detalles_evento(self):
+        pass
+
+    def AnteriorCordenadaBotton_detalles_evento(self):
         pass
 
 if __name__ == "__main__":
