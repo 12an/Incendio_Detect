@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 8.0.1, 2022-11-13T21:03:41. -->
+<!-- Written by QtCreator 8.0.2, 2022-12-04T23:47:25. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -98,7 +98,7 @@
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Python.PysideBuildStep</value>
-      <value type="QString" key="Python.PySideProjectTool">C:\Users\2233a\AppData\Roaming\Python\Python39\Scripts\pyside6-project.exe</value>
+      <value type="QString" key="Python.PySideProjectTool">C:\Users\2233a\anaconda3\envs\incendio_detect\Scripts\pyside6-project.exe</value>
      </valuemap>
      <value type="qlonglong" key="ProjectExplorer.BuildStepList.StepsCount">1</value>
      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Build</value>

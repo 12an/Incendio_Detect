@@ -2,31 +2,22 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QLabel
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QUrl
 from PySide6 import QtGui
-from PyQt5.QtWebKit import QWebSettings
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWebKitWidgets import QWebView
+from PySide6.QtWebEngineWidgets import *
+from PySide6.QtWebEngineCore import *
 from widget import Widget
-
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside2-uic form.ui -o ui_form.py
-from ui_form import Ui_main_qwidget
 
 
 class ImagenLabel:
     def __init__(self, name):
         self.name = name
-        self.imagen_qlabel = QLabel()
+        self.qlabel = QLabel()
 
 
 class ViewControl(Widget):
-    def __init__(self, cantidad_imagenes, parent=None):
-        super().__init__(parent)
-        self.ui = Ui_main_qwidget()
-        self.ui.setupUi(self)
+    def __init__(self):
+        Widget.__init__(self)
         # eventos
         self.ui.ArmDisarmButton_dron.clicked.connect(self.ArmDisarmButton_dron_evento)
         self.ui.StartMisionButton_dron.clicked.connect(self.StartMisionButton_dron_evento)
@@ -44,16 +35,16 @@ class ViewControl(Widget):
         # imagen tab 3 detalles
         self.imagenes_detalles = {"0":ImagenLabel("Foto_Camara"),
                                   "1":ImagenLabel("ImagenProcesada")}
-        self.ui.Foto_Camara.addWidget(self.imagenes_detalles.get("0"),
+        self.ui.Foto_Camara.addWidget(self.imagenes_detalles.get("0").qlabel,
                                   1,
                                   1)
-        self.ui.ImagenProcesada.addWidget(self.imagenes_detalles.get("1"),
+        self.ui.ImagenProcesada.addWidget(self.imagenes_detalles.get("1").qlabel,
                                   1,
                                   1)
         #mapa
-        self.web = QWebView()
-        self.web.settings().setAttribute(QWebSettings.JavascriptEnabled, True)
-        self.ui.web_mapa.addWidget(self.web,
+        self.web_view = QWebEngineView()
+        self.web_view.settings()
+        self.ui.web_mapa.addWidget(self.web_view,
                                   1,
                                   1)
 
@@ -81,10 +72,10 @@ class ViewControl(Widget):
                 imagen = imagen.scaled(469, 469, Qt.KeepAspectRatio)
 
             self.label_image[index_layout].setPixmap(imagen)
-    def search_cordenates_map(self, cordenada):
-        web.load(QUrl(tempPath))
-        web.show()
-        pass
+    def search_cordenates_map(self, cordenada = 45):
+        self.web_view.load(QUrl("https://www.google.com/maps/place/18%C2%B032'10.2%22N+69%C2%B053'40.5%22W/@18.5361811,-69.896769"))
+        self.web_view.show()
+
 
     def show_plot(self, canvas_plot, index_layout):
         self.plot_layout[index_layout].addWidget(canvas_plot,
@@ -108,7 +99,6 @@ class ViewControl(Widget):
 
     def SiguienteCordenadaBotton_mapa_evento(self):
         pass
-
 
     def GenerarReporteBotton_detalles_evento(self):
         pass

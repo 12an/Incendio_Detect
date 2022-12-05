@@ -17,31 +17,8 @@ class MplCanvas(FigureCanvasQTAgg):
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
 
-class PuntosIncendioReferenciaDron:
-    def __init__(self, cordenada_dron, incendio_seleccion_ij):
-        self.cordenada_dron = cordenada_dron
-        self.altura = altura
-        self.incendio_seleccion_ij = incendio_seleccion_ij
-    def get3d_2d(self):
-        # z es constante a la altura de la imagen
-        for i,j,temp in zip(self.incendio_seleccion_ij):
-            vector_pixel_2d_posicion = np.matrix([[i], [j], [self.altura]])
-            foto_3d_from_2d = np.linalg.solv(self.newcameramtx, vector_pixel_2d_posicion)
-            self.foto_3d_from_2d[i][j][0] = foto_3d_from_2d[0]
-            self.foto_3d_from_2d[i][j][1] = foto_3d_from_2d[1]
-            self.foto_3d_from_2d[i][j][2] = foto_3d_from_2d[2]
 
-class OrigenReferenciaGlobal(PuntosIncendioReferenciaDron):
-    def __init__(self, cordenada_referencia_global):
-        self.cordenada_referencia_global = cordenada_referencia_global
-
-
-class IncendioProyeccionOrigen(OrigenReferenciaGlobal):
-    def __init__(self):
-        pass
-
-
-class IncendioData(IncendioProyeccionOrigen):
+class IncendioData():
     def __init__(self,foto_referencia,
                  cordenada_origen_incendio,
                  categoria,
@@ -60,20 +37,6 @@ class IncendioData(IncendioProyeccionOrigen):
         self.intensidad = intensidad
 
 
-class CameraData:
-    def __init__(self,
-                 ret,
-                 mtx,
-                 dist,
-                 rvecs,
-                 tvecs):
-        self.ret = ret
-        self.mtx = mtx
-        self.dist = dist
-        self.rvecs = rvecs
-        self.tvecs = tvecs
-
-
 class FotoChesspatternData():
     total_fotos = 0
     def __init__(self, id_foto, foto):
@@ -81,6 +44,7 @@ class FotoChesspatternData():
         self.agregada = False
         self.foto = foto
         self.__class__.total_fotos += 1
+
 
 class DatosControl():
 
