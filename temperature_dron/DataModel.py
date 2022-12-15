@@ -19,22 +19,21 @@ class MplCanvas(FigureCanvasQTAgg):
 
 
 class IncendioData():
-    def __init__(self,foto_referencia,
-                 cordenada_origen_incendio,
-                 categoria,
-                 fecha_deteccion,
-                 ultima_actualizacion,
-                 observaciones,
-                 intensidad,
+    def __init__(self,foto_camara,
+                 ID_data,
                  *arg,
                  **args):
-        self.foto_referencia = foto_referencia
-        self.cordenada_origen = cordenada_origen_incendio
+        self.name_foto = name_foto
+        self.foto_camara = foto_camara
+        self.imagen_procesada = imagen_procesada
+        self.fecha_hora = fecha_hora
         self.categoria = categoria
-        self.fecha_deteccion = fecha_deteccion
-        self.ultima_actualizacion = ultima_actualizacion
-        self.observaciones = observaciones
-        self.intensidad = intensidad
+        self.cordenada_origen = cordenada_origen_incendio
+        self.area = area
+        self.estimacion = estimacion
+    def url_cordenada(self):
+        
+
 
 
 class FotoChesspatternData():
@@ -57,37 +56,41 @@ class DatosControl():
                   ):
         print("inicializando DatosControl ")
         self.path_directory = path
-        self.imagenes_chesspattern = list()
+
         self.carpeta_fotos_analisis = carpeta_fotos_analisis
         self.carpeta_fotos_chesspattern = carpeta_fotos_chesspattern
         self.instriscic_pkl = instriscic_pkl
         self.carpeta_data = carpeta_data
         self.carpeta_gui = carpeta_gui
+        self.imagenes_chesspattern = list()
+        self.imagenes_procesamiento = list()
         self.camera_instriscic = list()
         self.read_instricic_camera()
+        
     def save_(func):
         def inner(self, *arg,**args):
             imwrite(func(self, *arg,**args))
         return inner
 
+
     def open_(func):
         def inner(self, *arg,**args):
-
             # charging images
             path, tipo_imagen = func(self, *arg,**args)
             for path_name_foto in glob.iglob(path + "\*.jpg"):
+                #al path le quitamos el nombre del archiv0
                 name_foto = path_name_foto[len(path) + 1 : ]
+                ID_data = name_foto[0:name_foto.find("_")]
                 imagen = cvtColor(imread(path_name_foto), COLOR_RGB2BGR)
-                id_imagen = name_foto[0:name_foto.find("_")]
                 if(tipo_imagen==1):
-                    altura_imagen = int(name_foto[name_foto.find("_") + 1: name_foto.find("-")])
-                    coordenada_mix = name_foto[name_foto.find("-") + 1: name_foto.find(".")]
-                    coordenada_imagen = {"x":coordenada_mix[coordenada_mix.find("x") + 1 :coordenada_mix.find("y")],
-                                         "y":coordenada_mix[coordenada_mix.find("x") + 1 :coordenada_mix.find("y")]}
+                    self.imagenes_procesamiento.append(IncendioData(*[],
+                                                                    **{"foto_camara":imagen,
+                                                                       "ID_data": ID_data
+                                                                       }))
                 if(tipo_imagen==2):
                     self.imagenes_chesspattern.append(
-                        FotoChesspatternData(id_imagen, imagen)
-                                                    )
+                                                      FotoChesspatternData(id_imagen, imagen)
+                                                      )
         return inner
 
     @open_

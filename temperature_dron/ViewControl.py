@@ -23,11 +23,11 @@ class ViewControl(Widget):
         self.ui.StartMisionButton_dron.clicked.connect(self.StartMisionButton_dron_evento)
         self.ui.RTLButton_dron.clicked.connect(self.RTLButton_dron_evento)
         self.ui.ManualAutoButton_dron.clicked.connect(self.ManualAutoButton_dron_evento)
-        self.ui.AnteriorCordenadaBotton_mapa.clicked.connect(self.AnteriorCordenadaBotton_mapa_evento)
-        self.ui.SiguienteCordenadaBotton_mapa.clicked.connect(self.SiguienteCordenadaBotton_mapa_evento)
+        self.ui.AnteriorCordenadaBotton_mapa.clicked.connect(self.anterior)
+        self.ui.SiguienteCordenadaBotton_mapa.clicked.connect(self.siguiente)
         self.ui.GenerarReporteBotton_detalles.clicked.connect(self.GenerarReporteBotton_detalles_evento)
-        self.ui.SiguienteCordenadaBotton_detalles.clicked.connect(self.SiguienteCordenadaBotton_detalles_evento)
-        self.ui.AnteriorCordenadaBotton_detalles.clicked.connect(self.AnteriorCordenadaBotton_detalles_evento)
+        self.ui.SiguienteCordenadaBotton_detalles.clicked.connect(self.siguiente)
+        self.ui.AnteriorCordenadaBotton_detalles.clicked.connect(self.anterior)
         # imagen 3d
         self.plot_layout = list()
         self.plot_layout.append(self.ui.mapa_3d)
@@ -82,6 +82,10 @@ class ViewControl(Widget):
                                                  1,
                                                  1)
 
+    def siguiente(self):
+        pass
+    def anterior(self):
+        pass
     def ArmDisarmButton_dron_evento(self):
         pass
 
@@ -94,20 +98,10 @@ class ViewControl(Widget):
     def ManualAutoButton_dron_evento(self):
         pass
 
-    def AnteriorCordenadaBotton_mapa_evento(self):
-        pass
-
-    def SiguienteCordenadaBotton_mapa_evento(self):
-        pass
-
     def GenerarReporteBotton_detalles_evento(self):
         pass
 
-    def SiguienteCordenadaBotton_detalles_evento(self):
-        pass
 
-    def AnteriorCordenadaBotton_detalles_evento(self):
-        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -17,7 +17,10 @@ class ControlModel(ViewControl):
         #datos
 
 
-
+    def siguiente(self):
+        pass
+    def anterior(self):
+        pass
     def ArmDisarmButton_dron_evento(self):
         pass
 
@@ -30,20 +33,7 @@ class ControlModel(ViewControl):
     def ManualAutoButton_dron_evento(self):
         pass
 
-    def AnteriorCordenadaBotton_mapa_evento(self):
-        pass
-
-    def SiguienteCordenadaBotton_mapa_evento(self):
-        pass
-
-
     def GenerarReporteBotton_detalles_evento(self):
-        pass
-
-    def SiguienteCordenadaBotton_detalles_evento(self):
-        pass
-
-    def AnteriorCordenadaBotton_detalles_evento(self):
         pass
 
 if __name__ == "__main__":
