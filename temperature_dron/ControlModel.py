@@ -4,23 +4,34 @@ import sys
 from PySide6.QtWidgets import QApplication
 from ViewControl import ViewControl
 from PIL import Image as im
-
-class ControlModel(ViewControl):
+from DataModel import DatosControl
+class ControlModel(ViewControl, DatosControl):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
+        self.index = 0
         self.current_dir = os.path.abspath(os.path.dirname( __file__ ))
-
         # cargando app
         ViewControl.__init__(self)
         self.search_cordenates_map()
         #datos
-
-
+        DatosControl.__init__(self,*[],
+                                      **{"path" : self.current_dir,
+                                         "carpeta_fotos_analisis" : "fotos_analisis",
+                                         "carpeta_fotos_chesspattern" : "fotos_chess_pattern",
+                                         "carpeta_gui" : "temperature_dron",
+                                         "carpeta_data" : "data",
+                                         "instriscic_pkl" : r"\registed_data_instricic.pkl"
+                                         }
+                             )
     def siguiente(self):
-        pass
+        if self.index < self.total_incendio:
+            self.index += 1
+        
     def anterior(self):
-        pass
+        if self.index >= 0:
+            self.index -= 1
+        
     def ArmDisarmButton_dron_evento(self):
         pass
 

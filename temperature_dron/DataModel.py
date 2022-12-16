@@ -23,26 +23,15 @@ class IncendioData():
                  ID_data,
                  *arg,
                  **args):
-        self.name_foto = name_foto
+        self.ID_data = ID_data
         self.foto_camara = foto_camara
-        self.imagen_procesada = imagen_procesada
-        self.fecha_hora = fecha_hora
-        self.categoria = categoria
-        self.cordenada_origen = cordenada_origen_incendio
-        self.area = area
-        self.estimacion = estimacion
-    def url_cordenada(self):
-        
-
-
 
 class FotoChesspatternData():
-    total_fotos = 0
     def __init__(self, id_foto, foto):
         self.id_foto = id_foto
         self.agregada = False
         self.foto = foto
-        self.__class__.total_fotos += 1
+
 
 
 class DatosControl():
@@ -66,6 +55,8 @@ class DatosControl():
         self.imagenes_procesamiento = list()
         self.camera_instriscic = list()
         self.read_instricic_camera()
+        self.total_incendio = 0
+        self.total_fotos_chesspattern = 0
         
     def save_(func):
         def inner(self, *arg,**args):
@@ -83,13 +74,15 @@ class DatosControl():
                 ID_data = name_foto[0:name_foto.find("_")]
                 imagen = cvtColor(imread(path_name_foto), COLOR_RGB2BGR)
                 if(tipo_imagen==1):
+                    self.total_incendio += 1
                     self.imagenes_procesamiento.append(IncendioData(*[],
                                                                     **{"foto_camara":imagen,
                                                                        "ID_data": ID_data
                                                                        }))
                 if(tipo_imagen==2):
+                    self.total_fotos_chesspattern += 1
                     self.imagenes_chesspattern.append(
-                                                      FotoChesspatternData(id_imagen, imagen)
+                                                      FotoChesspatternData(ID_data, imagen)
                                                       )
         return inner
 
