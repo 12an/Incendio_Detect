@@ -72,10 +72,29 @@ class ViewControl(Widget):
                 imagen = imagen.scaled(469, 469, Qt.KeepAspectRatio)
 
             self.label_image[index_layout].setPixmap(imagen)
-    def search_cordenates_map(self, cordenada = 45):
-        self.web_view.load(QUrl("https://www.google.com/maps/place/18%C2%B032'10.2%22N+69%C2%B053'40.5%22W/@18.5361811,-69.896769"))
-        self.web_view.show()
 
+    def search_cordenates_map(self, cordenada):
+        self.web_view.load(QUrl(cordenada))
+        self.web_view.show()
+    def update_text_labels(self,
+                           fecha_hora_inicio,
+                           categoria,
+                           cordenadas_origen,
+                           area,
+                           estado,
+                           coord_actual_dron,
+                           porc_bat,
+                           *arg, 
+                           **args):
+        #detalles fuego
+        self.ui.label_fecha_inicio.setText(str(fecha_hora_inicio))
+        self.ui.label_categoria.setText(str(categoria))
+        self.ui.label_cordenadas_origen.setText(str(cordenadas_origen))
+        self.ui.label_estado.setText(str(estado))
+        self.ui.label_area.setText(str(area))
+        #data dron
+        self.ui.coord_actual_lb.setText(str(coord_actual_dron))
+        self.ui.porc_bat.setText(str(porc_bat))
 
     def show_plot(self, canvas_plot, index_layout):
         self.plot_layout[index_layout].addWidget(canvas_plot,

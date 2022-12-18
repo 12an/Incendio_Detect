@@ -29,7 +29,7 @@ class Data_SQL():
         self.current_dir = os.path.abspath(os.path.dirname( __file__ ))
         self.data_dir = self.current_dir.replace("code_dron", "data/")
         self.foto_dir = self.current_dir.replace("code_dron", "fotos_analisis/")
-        self.conection = sqlite3.connect('Data_Incendio.db')
+        self.conection = sqlite3.connect(self.data_dir + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
     def guardar_datos(self, instance_data_incendio):
@@ -41,8 +41,8 @@ class Data_SQL():
                           instance_data_incendio.estimacion)
         self.cursor.execute("INSERT INTO INFORMACION(FECHA, HORA, CATEGORIA, AREA, ESTIMACION) VALUES(?,?,?,?,?)", data_infotable)
         self.conection.commit()
-        self.cursor = sqlite3.execute('SELECT max(id) FROM table_name')
-        max_id = self.cursor.fetchone()[0]
+        self.data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
+        max_id = self.data_row.fetchone()[0]
         data_latitudetable = (max_id,
                              instance_data_incendio.latitude.get("grados"),
                              instance_data_incendio.latitude.get("minutos"),
@@ -57,7 +57,15 @@ class Data_SQL():
         self.conection.commit()
         #GUARDANDO FOTO
         imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
-        
-        
- 
+
+#para pruebas
+if __name__ == "__main__":  
+    current_dir = os.path.abspath(os.path.dirname( __file__ ))
+    data_dir = current_dir.replace("code_dron", "data/")
+    foto_dir = current_dir.replace("code_dron", "fotos_analisis/")
+    conection = sqlite3.connect(data_dir + 'Data_Incendio.db')
+    cursor = conection.cursor()
+    data_row = cursor.execute('SELECT FECHA, HORA FROM INFORMACION WHERE ID == :id',{"id":1})
+    max_id = data_row.fetchone()
+
         
