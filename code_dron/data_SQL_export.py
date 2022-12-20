@@ -11,7 +11,7 @@ import os
 from cv2 import imwrite
 import pickle
 
-class path():
+class Path():
     def __init__(self):
         self.origen_dir = os.path.abspath(os.path.dirname( __file__ ))
         self.current_dir = self.origen_dir
@@ -57,7 +57,7 @@ class Data_Incendio():
 
 class Data_SQL(path):
     def __init__(self):
-        path.__init__(self)
+        Path.__init__(self)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
@@ -86,14 +86,24 @@ class Data_SQL(path):
         self.conection.commit()
         #GUARDANDO FOTO
         imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
-class dumper_variable():
+
+class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
         with open(directorio + variable_name + ".pkl" , "wb") as saving:
             pickle.dump(variable, saving)
+    def pump(self, directorio, variable_name):
+        with open(directorio + variable_name + ".pkl", "rb") as reading:
+            variable_leida = 0
+            try:
+                variable_leida = pickle.load(reading)
+            except EOFError as nothing_in_file:
+                print("there is nothing in the file, of data:")
+                print(nothing_in_file)
+            return variable_leida
         
-class coordenada_data(path, dumper_variable):
+class coordenada_data(Path, DumpPumpVariable):
     def __init__(self):
-        path.__init__(self)
+        Path.__init__(self)
         self.value = {"latitude": [0,0,0], "longitud": [0,0,0]}
         self.variable_name = "coordenadas"
         
@@ -101,9 +111,9 @@ class coordenada_data(path, dumper_variable):
         self.value = value
         self.dump(self.go_to("data_dir"), self.variable_name, value)
 
-class integer_data(path, dumper_variable):
+class integer_data(Path, DumpPumpVariable):
     def __init__(self):
-        path.__init__(self)
+        Path.__init__(self)
         self.value = 0
         self.variable_name = "bateria_data"
         

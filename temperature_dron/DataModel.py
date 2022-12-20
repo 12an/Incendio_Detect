@@ -10,6 +10,49 @@ matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
+class DumpPumpVariable():
+    def dump(self, directorio, variable_name, variable):
+        with open(directorio + variable_name + ".pkl" , "wb") as saving:
+            pickle.dump(variable, saving)
+    def pump(self, directorio, variable_name):
+        with open(directorio + variable_name + ".pkl", "rb") as reading:
+            variable_leida = 0
+            try:
+                variable_leida = pickle.load(reading)
+            except EOFError as nothing_in_file:
+                print("there is nothing in the file, of data:")
+                print(nothing_in_file)
+            return variable_leida
+
+class Path():
+    def __init__(self):
+        self.origen_dir = os.path.abspath(os.path.dirname( __file__ ))
+        self.current_dir = self.origen_dir
+        self.carpetas_dir = {"data_dir" : "data",
+                             "foto_dir" : "fotos_analisis",
+                             "dron_dir" : "code_dron",
+                             "chess_dir" : "fotos_chess_pattern",
+                             "main_dir" : "temperature_dron"}
+        self.get_actual_dir()
+    """
+    optener data con una key relacionada al diccionario
+        self.carpetas_dir = {"data_dir" : "data",
+                             "foto_dir" : "fotos_analisis",
+                             "dron_dir" : "code_dron",
+                             "chess_dir" : "fotos_chess_pattern",
+                             "main_dir" : "temperature_dron"}
+    """
+    def go_to(self, key):
+        self.current_dir = self.current_dir.replace(self.name_actual_carpet,
+                                                    self.carpetas_dir.get(key))
+        self.name_actual_carpet = self.carpetas_dir.get(key)
+        return self.current_dir + "/"
+        
+    def get_actual_dir(self):
+        for key, value in self.carpetas_dir:
+            if value in self.current_dir:
+                self.name_actual_carpet = value
+
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -34,35 +77,17 @@ class FotoChesspatternData():
 
 
 
-class DatosControl():
+class DatosControl(Path, DumpPumpVariable):
 
-    def __init__(self, path,
-                 carpeta_fotos_analisis,
-                 carpeta_fotos_chesspattern,
-                 carpeta_gui,
-                 instriscic_pkl,
-                 carpeta_data
-                  ):
+    def __init__(self):
+        Path.__init__(self)
         print("inicializando DatosControl ")
-        self.path_directory = path
-
-        self.carpeta_fotos_analisis = carpeta_fotos_analisis
-        self.carpeta_fotos_chesspattern = carpeta_fotos_chesspattern
-        self.instriscic_pkl = instriscic_pkl
-        self.carpeta_data = carpeta_data
-        self.carpeta_gui = carpeta_gui
         self.imagenes_chesspattern = list()
         self.imagenes_procesamiento = list()
         self.camera_instriscic = list()
         self.read_instricic_camera()
         self.total_incendio = 0
         self.total_fotos_chesspattern = 0
-        
-    def save_(func):
-        def inner(self, *arg,**args):
-            imwrite(func(self, *arg,**args))
-        return inner
-
 
     def open_(func):
         def inner(self, *arg,**args):
@@ -89,8 +114,7 @@ class DatosControl():
     @open_
     def open_foto_analisis(self, path = False):
         if isinstance(path, bool):
-            path = self.path_directory
-            return path.replace(self.carpeta_gui, self.carpeta_fotos_analisis), 1
+            return self.go_to("foto_dir"), 1
         else:
             return path, 1
 
@@ -98,7 +122,7 @@ class DatosControl():
     def open_foto_chesspattern(self, path = False):
         if isinstance(path, bool):
             path = self.path_directory
-            return path.replace(self.carpeta_gui, self.carpeta_fotos_chesspattern), 2
+            return self.go_to("chess_dir"), 2
         else:
             return path, 2
 
@@ -107,22 +131,19 @@ class DatosControl():
     def save_registed_camera_instricic(self, ):
         pass
 
-    #guarda foto con path nombre, altura y carpeta en especifico
-    @save_
-    def save_fotos_name(self, foto, altura, name, carpeta, path = False):
-        if isinstance(path, bool):
-            return os.path.join(self.path_directory, self.carpeta, name + "_" + str(altura) + ".png"), foto
-        else:
-            return os.path.join(path, self.carpeta, name + "_" + str(altura) + ".png"), foto
-
     def save_instricic_camera(self):
-        with open(self.path_directory.replace(self.carpeta_gui, self.carpeta_data) + self.instriscic_pkl , "wb") as saving:
-            pickle.dump([self.ret, self.mtx, self.dist, self.rvecs, self.tvecs], saving)
+        self.dump(self.go_to("data_dir"),
+                  "instricic_camera",
+                  [self.ret, self.mtx, self.dist, self.rvecs, self.tvecs])
 
     def read_instricic_camera(self):
-        with open(self.path_directory.replace(self.carpeta_gui, self.carpeta_data) + self.instriscic_pkl , "rb") as reading:
-            try:
-                self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = pickle.load(reading)
-            except EOFError as nothing_in_file:
-                print("there is nothing in the file, of data:")
-                print(nothing_in_file)
+        packet = self.pump(self.go_to("data_dir"), "instricic_camera")
+        try:
+            self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = packet
+        except ValueError as nothing_in_file:
+            print("parece que no se ha guardado")
+            print(nothing_in_file)
+    def read_battery_dron(self):
+        pass
+    def read_actual_coordenates_dron(self):
+        pass

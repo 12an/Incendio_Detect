@@ -14,7 +14,8 @@
    <string>Incendio Mision</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="applications-engineering"/>
+   <iconset theme="applications-engineering">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
@@ -29,7 +30,7 @@
     <enum>QTabWidget::Triangular</enum>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>3</number>
    </property>
    <property name="elideMode">
     <enum>Qt::ElideMiddle</enum>
@@ -302,6 +303,145 @@
       </rect>
      </property>
      <layout class="QGridLayout" name="mapa_3d"/>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="Editar">
+    <attribute name="title">
+     <string>Observaciones</string>
+    </attribute>
+    <widget class="QPlainTextEdit" name="textEdit">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>190</y>
+       <width>281</width>
+       <height>211</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTimeEdit" name="horaEdit">
+     <property name="geometry">
+      <rect>
+       <x>300</x>
+       <y>110</y>
+       <width>71</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QDateEdit" name="fechaEdit">
+     <property name="geometry">
+      <rect>
+       <x>470</x>
+       <y>110</y>
+       <width>71</width>
+       <height>25</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="GuardarCambios">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>510</y>
+       <width>191</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Guardar Cambios</string>
+     </property>
+     <property name="icon">
+      <iconset theme="video-x-generic">
+       <normaloff>.</normaloff>.</iconset>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="CancelarCambios">
+     <property name="geometry">
+      <rect>
+       <x>420</x>
+       <y>510</y>
+       <width>191</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Cancelar Cambios</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="TITLEGUIDE">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>20</y>
+       <width>351</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Miriam CLM</family>
+       <pointsize>15</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Observaciones Generadas</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_HORA_OBSERVACIONES">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>120</y>
+       <width>31</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Hora:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_ESTIMACION_OBSERVACIONES">
+     <property name="geometry">
+      <rect>
+       <x>360</x>
+       <y>160</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Estimacion</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_FECHA_OBSERVACIONES">
+     <property name="geometry">
+      <rect>
+       <x>420</x>
+       <y>120</y>
+       <width>41</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Fecha:</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_3">

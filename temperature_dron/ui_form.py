@@ -15,15 +15,22 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QLabel,
-    QPushButton, QSizePolicy, QTabWidget, QWidget)
+from PySide6.QtWidgets import (QApplication, QDateEdit, QFrame, QGridLayout,
+    QLabel, QPlainTextEdit, QPushButton, QSizePolicy,
+    QTabWidget, QTimeEdit, QWidget)
 
 class Ui_MainWidget(object):
     def setupUi(self, MainWidget):
         if not MainWidget.objectName():
             MainWidget.setObjectName(u"MainWidget")
         MainWidget.resize(852, 600)
-        icon = QIcon(QIcon.fromTheme(u"applications-engineering"))
+        icon = QIcon()
+        iconThemeName = u"applications-engineering"
+        if QIcon.hasThemeIcon(iconThemeName):
+            icon = QIcon.fromTheme(iconThemeName)
+        else:
+            icon.addFile(u".", QSize(), QIcon.Normal, QIcon.Off)
+        
         MainWidget.setWindowIcon(icon)
         self.tabWidget = QTabWidget(MainWidget)
         self.tabWidget.setObjectName(u"tabWidget")
@@ -123,6 +130,45 @@ class Ui_MainWidget(object):
         self.mapa_3d.setObjectName(u"mapa_3d")
         self.mapa_3d.setContentsMargins(0, 0, 0, 0)
         self.tabWidget.addTab(self.tab, "")
+        self.Editar = QWidget()
+        self.Editar.setObjectName(u"Editar")
+        self.textEdit = QPlainTextEdit(self.Editar)
+        self.textEdit.setObjectName(u"textEdit")
+        self.textEdit.setGeometry(QRect(260, 190, 281, 211))
+        self.horaEdit = QTimeEdit(self.Editar)
+        self.horaEdit.setObjectName(u"horaEdit")
+        self.horaEdit.setGeometry(QRect(300, 110, 71, 25))
+        self.fechaEdit = QDateEdit(self.Editar)
+        self.fechaEdit.setObjectName(u"fechaEdit")
+        self.fechaEdit.setGeometry(QRect(470, 110, 71, 25))
+        self.GuardarCambios = QPushButton(self.Editar)
+        self.GuardarCambios.setObjectName(u"GuardarCambios")
+        self.GuardarCambios.setGeometry(QRect(220, 510, 191, 41))
+        self.GuardarCambios.setFont(font1)
+        self.GuardarCambios.setIcon(icon1)
+        self.CancelarCambios = QPushButton(self.Editar)
+        self.CancelarCambios.setObjectName(u"CancelarCambios")
+        self.CancelarCambios.setGeometry(QRect(420, 510, 191, 41))
+        self.CancelarCambios.setFont(font1)
+        self.TITLEGUIDE = QLabel(self.Editar)
+        self.TITLEGUIDE.setObjectName(u"TITLEGUIDE")
+        self.TITLEGUIDE.setGeometry(QRect(220, 20, 351, 71))
+        font2 = QFont()
+        font2.setFamilies([u"Miriam CLM"])
+        font2.setPointSize(15)
+        font2.setBold(True)
+        self.TITLEGUIDE.setFont(font2)
+        self.TITLEGUIDE.setAlignment(Qt.AlignCenter)
+        self.label_HORA_OBSERVACIONES = QLabel(self.Editar)
+        self.label_HORA_OBSERVACIONES.setObjectName(u"label_HORA_OBSERVACIONES")
+        self.label_HORA_OBSERVACIONES.setGeometry(QRect(260, 120, 31, 16))
+        self.label_ESTIMACION_OBSERVACIONES = QLabel(self.Editar)
+        self.label_ESTIMACION_OBSERVACIONES.setObjectName(u"label_ESTIMACION_OBSERVACIONES")
+        self.label_ESTIMACION_OBSERVACIONES.setGeometry(QRect(360, 160, 71, 16))
+        self.label_FECHA_OBSERVACIONES = QLabel(self.Editar)
+        self.label_FECHA_OBSERVACIONES.setObjectName(u"label_FECHA_OBSERVACIONES")
+        self.label_FECHA_OBSERVACIONES.setGeometry(QRect(420, 120, 41, 16))
+        self.tabWidget.addTab(self.Editar, "")
         self.tab_3 = QWidget()
         self.tab_3.setObjectName(u"tab_3")
         self.SiguienteCordenadaBotton_detalles = QPushButton(self.tab_3)
@@ -143,10 +189,6 @@ class Ui_MainWidget(object):
         self.label = QLabel(self.tab_3)
         self.label.setObjectName(u"label")
         self.label.setGeometry(QRect(460, 89, 351, 71))
-        font2 = QFont()
-        font2.setFamilies([u"Miriam CLM"])
-        font2.setPointSize(15)
-        font2.setBold(True)
         self.label.setFont(font2)
         self.label.setAlignment(Qt.AlignCenter)
         self.label_CATEGORIA = QLabel(self.tab_3)
@@ -204,7 +246,7 @@ class Ui_MainWidget(object):
 
         self.retranslateUi(MainWidget)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWidget)
@@ -224,6 +266,13 @@ class Ui_MainWidget(object):
         self.SiguienteCordenadaBotton_mapa.setText(QCoreApplication.translate("MainWidget", u"Siguiente Cordenada", None))
         self.AnteriorCordenadaBotton_mapa.setText(QCoreApplication.translate("MainWidget", u"Anterior Cordenada", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWidget", u"Mapa", None))
+        self.GuardarCambios.setText(QCoreApplication.translate("MainWidget", u"Guardar Cambios", None))
+        self.CancelarCambios.setText(QCoreApplication.translate("MainWidget", u"Cancelar Cambios", None))
+        self.TITLEGUIDE.setText(QCoreApplication.translate("MainWidget", u"Observaciones Generadas", None))
+        self.label_HORA_OBSERVACIONES.setText(QCoreApplication.translate("MainWidget", u"Hora:", None))
+        self.label_ESTIMACION_OBSERVACIONES.setText(QCoreApplication.translate("MainWidget", u"Estimacion", None))
+        self.label_FECHA_OBSERVACIONES.setText(QCoreApplication.translate("MainWidget", u"Fecha:", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Editar), QCoreApplication.translate("MainWidget", u"Observaciones", None))
         self.SiguienteCordenadaBotton_detalles.setText(QCoreApplication.translate("MainWidget", u"Siguiente Cordenada", None))
         self.AnteriorCordenadaBotton_detalles.setText(QCoreApplication.translate("MainWidget", u"Anterior Cordenada", None))
         self.label.setText(QCoreApplication.translate("MainWidget", u"Detalles Incendio", None))
