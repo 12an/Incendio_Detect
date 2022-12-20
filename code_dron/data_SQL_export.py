@@ -9,6 +9,7 @@ from datetime import datetime
 import sqlite3
 import os
 from cv2 import imwrite
+import pickle
 
 class path():
     def __init__(self):
@@ -85,32 +86,35 @@ class Data_SQL(path):
         self.conection.commit()
         #GUARDANDO FOTO
         imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
-
-class integer_data:
+class dumper_variable():
+    def dump(self, directorio, variable_name, variable):
+        with open(directorio + variable_name + ".pkl" , "wb") as saving:
+            pickle.dump(variable, saving)
+        
+class coordenada_data(path, dumper_variable):
     def __init__(self):
-        value = 0
-        pass
-    def __get__(self):
-        pass
-    def __set__(self):
-        pass
+        path.__init__(self)
+        self.value = {"latitude": [0,0,0], "longitud": [0,0,0]}
+        self.variable_name = "coordenadas"
+        
+    def __set__(self, obj, value):
+        self.value = value
+        self.dump(self.go_to("data_dir"), self.variable_name, value)
 
-class coordenada_data:
+class integer_data(path, dumper_variable):
     def __init__(self):
-        value = {"latitude": [0,0,0], "longitud": [0,0,0]}
-        pass
-    def __get__(self):
-        pass
-    def __set__(self):
-        pass
-    
-    
+        path.__init__(self)
+        self.value = 0
+        self.variable_name = "bateria_data"
+        
+    def __set__(self, obj, value):
+        self.value = value
+        self.dump(self.go_to("data_dir"), self.variable_name, value)
+
 class DronData():
     def __init__(self, bateria_porcentage, coordenadas, **args):
-        self.bateria_porcentage = bateria_porcentage
-        self.coordenadas = coordenadas # tipo de dato{"latitude":[0, 0, 0], "longitud":[0, 0, 0]}
-        
-    def __set__(self):
+        self.bateria_porcentage = integer_data() 
+        self.coordenadas = coordenada_data()
         
 
 
