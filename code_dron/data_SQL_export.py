@@ -10,6 +10,36 @@ import sqlite3
 import os
 from cv2 import imwrite
 
+class path():
+    def __init__(self):
+        self.origen_dir = os.path.abspath(os.path.dirname( __file__ ))
+        self.current_dir = self.origen_dir
+        self.carpetas_dir = {"data_dir" : "data",
+                             "foto_dir" : "fotos_analisis",
+                             "dron_dir" : "code_dron",
+                             "chess_dir" : "fotos_chess_pattern",
+                             "main_dir" : "temperature_dron"}
+        self.get_actual_dir()
+    """
+    optener data con una key relacionada al diccionario
+        self.carpetas_dir = {"data_dir" : "data",
+                             "foto_dir" : "fotos_analisis",
+                             "dron_dir" : "code_dron",
+                             "chess_dir" : "fotos_chess_pattern",
+                             "main_dir" : "temperature_dron"}
+    """
+    def go_to(self, key):
+        self.current_dir = self.current_dir.replace(self.name_actual_carpet,
+                                                    self.carpetas_dir.get(key))
+        self.name_actual_carpet = self.carpetas_dir.get(key)
+        return self.current_dir + "/"
+        
+    def get_actual_dir(self):
+        for key, value in self.carpetas_dir:
+            if value in self.current_dir:
+                self.name_actual_carpet = value
+                
+
 class Data_Incendio():
     def __init__(self, foto):
         current_datetime = datetime.now()
@@ -24,12 +54,10 @@ class Data_Incendio():
         self.ID = 0
         
 
-class Data_SQL():
+class Data_SQL(path):
     def __init__(self):
-        self.current_dir = os.path.abspath(os.path.dirname( __file__ ))
-        self.data_dir = self.current_dir.replace("code_dron", "data/")
-        self.foto_dir = self.current_dir.replace("code_dron", "fotos_analisis/")
-        self.conection = sqlite3.connect(self.data_dir + 'Data_Incendio.db')
+        path.__init__(self)
+        self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
     def guardar_datos(self, instance_data_incendio):
@@ -57,6 +85,34 @@ class Data_SQL():
         self.conection.commit()
         #GUARDANDO FOTO
         imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
+
+class integer_data:
+    def __init__(self):
+        value = 0
+        pass
+    def __get__(self):
+        pass
+    def __set__(self):
+        pass
+
+class coordenada_data:
+    def __init__(self):
+        value = {"latitude": [0,0,0], "longitud": [0,0,0]}
+        pass
+    def __get__(self):
+        pass
+    def __set__(self):
+        pass
+    
+    
+class DronData():
+    def __init__(self, bateria_porcentage, coordenadas, **args):
+        self.bateria_porcentage = bateria_porcentage
+        self.coordenadas = coordenadas # tipo de dato{"latitude":[0, 0, 0], "longitud":[0, 0, 0]}
+        
+    def __set__(self):
+        
+
 
 #para pruebas
 if __name__ == "__main__":  
