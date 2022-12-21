@@ -3,7 +3,7 @@ import os
 import sys
 from PySide6.QtWidgets import QApplication
 from ViewControl import ViewControl
-from DataModel import DatosControl
+from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
 
@@ -17,48 +17,53 @@ class ControlModel(ViewControl, DatosControl):
         ViewControl.__init__(self)
         self.search_cordenates_map()
         #datos
-        DatosControl.__init__(self,*[],
-                                      **{"path" : self.current_dir,
-                                         "carpeta_fotos_analisis" : "fotos_analisis",
-                                         "carpeta_fotos_chesspattern" : "fotos_chess_pattern",
-                                         "carpeta_gui" : "temperature_dron",
-                                         "carpeta_data" : "data",
-                                         "instriscic_pkl" : r"\registed_data_instricic.pkl"
-                                         }
-                             )
+        DatosControl.__init__(self)
         self.database_dir = self.current_dir.replace("temperature_dron", "data/")
         self.conection = sqlite3.connect(self.database_dir + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
+        #control dron
+        self.start_mision = BoolData(False, "start_mision")
+        self.rtl = BoolData(False, "rtl")
+        self.manual_automatico = BoolData(False, "manual_automatico")
+        self.arm_disarm = BoolData(False, "arm_disarm")
         
         # creando timer recurrente leer data del dron
         self.timer = QTimer()
         self.timer.timeout.connect(self.cargar_datos_dron)
         self.timer.start(3/2)#segundos 
 
-
-    def ArmDisarmButton_dron_evento(self):
-        pass
-
     def GuardarCambios_observaciones_evento(self):
         estimacion_to_save  = self.get_text_estimacion()
-        self.cursor.execute('INSERT INTO INFORMACION(ESTIMACION) VALUES(:text) WHERE ID == :id',
-                           {"id":self.ID_data_show, "text":estimacion_to_save})
+        hora_to_save = self.get_hora_estimacion()
+        fecha_to_save = self.get_fecha_estimacion()
+        self.cursor.execute('INSERT INTO INFORMACION(FECHA, HORA, ESTIMACION) VALUES(:text, :"hora", "fecha") WHERE ID == :id',
+                           {"id":self.ID_data_show,
+                            "text":estimacion_to_save,
+                            "hora":hora_to_save,
+                            "fecha":fecha_to_save})
         self.conection.commit()
 
     def CancelarCambios_observaciones_evento(self):
-        text_mostrar = self.cursor.execute('SELECT ESTIMACION FROM INFORMACION WHERE ID == :id',
+        data_row = self.cursor.execute('SELECT FECHA, HORA, ESTIMACION FROM INFORMACION WHERE ID == :id',
                                           {"id":self.ID_data_show})
-        self.update_estimacion_show(text_mostrar)
+        fecha, hora, estimacion = data_row.fetchone()
+        
+        self.update_estimacion_show(estimacion)
+        self.update_fecha_show(fecha)
+        self.update_hora_show(hora)
 
+    def ArmDisarmButton_dron_evento(self):
+        self.arm_disarm.value = not(self.arm_disarm.value)
+        
     def StartMisionButton_dron_evento(self):
-        pass
+        self.start_mision.value = not(self.start_mision.value)
 
     def RTLButton_dron_evento(self):
-        pass
+        self.rtl.value = not(self.rtl.value)
 
     def ManualAutoButton_dron_evento(self):
-        pass
+        self.manual_automatico.value = not(self.manual_automatico.value)
 
     def GenerarReporteBotton_detalles_evento(self):
         pass

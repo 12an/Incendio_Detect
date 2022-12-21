@@ -10,6 +10,8 @@ matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
+
+
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
         with open(directorio + variable_name + ".pkl" , "wb") as saving:
@@ -23,6 +25,7 @@ class DumpPumpVariable():
                 print("there is nothing in the file, of data:")
                 print(nothing_in_file)
             return variable_leida
+
 
 class Path():
     def __init__(self):
@@ -54,6 +57,17 @@ class Path():
                 self.name_actual_carpet = value
 
 
+class BoolData(Path, DumpPumpVariable):
+    def __init__(self, value, variable_name):
+        Path.__init__(self)
+        self.value = False
+        self.variable_name = variable_name
+
+    def __set__(self, obj, value):
+        self.value = value
+        self.dump(self.go_to("data_dir"), self.variable_name, value)
+
+
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
@@ -69,12 +83,12 @@ class IncendioData():
         self.ID_data = ID_data
         self.foto_camara = foto_camara
 
+
 class FotoChesspatternData():
     def __init__(self, id_foto, foto):
         self.id_foto = id_foto
         self.agregada = False
         self.foto = foto
-
 
 
 class DatosControl(Path, DumpPumpVariable):

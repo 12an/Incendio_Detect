@@ -30,7 +30,7 @@
     <enum>QTabWidget::Triangular</enum>
    </property>
    <property name="currentIndex">
-    <number>3</number>
+    <number>0</number>
    </property>
    <property name="elideMode">
     <enum>Qt::ElideMiddle</enum>
@@ -332,11 +332,41 @@
     <widget class="QDateEdit" name="fechaEdit">
      <property name="geometry">
       <rect>
-       <x>470</x>
+       <x>460</x>
        <y>110</y>
        <width>71</width>
        <height>25</height>
       </rect>
+     </property>
+     <property name="dateTime">
+      <datetime>
+       <hour>0</hour>
+       <minute>0</minute>
+       <second>0</second>
+       <year>2023</year>
+       <month>1</month>
+       <day>1</day>
+      </datetime>
+     </property>
+     <property name="maximumDateTime">
+      <datetime>
+       <hour>23</hour>
+       <minute>59</minute>
+       <second>59</second>
+       <year>2025</year>
+       <month>12</month>
+       <day>31</day>
+      </datetime>
+     </property>
+     <property name="minimumDateTime">
+      <datetime>
+       <hour>4</hour>
+       <minute>0</minute>
+       <second>0</second>
+       <year>2000</year>
+       <month>9</month>
+       <day>14</day>
+      </datetime>
      </property>
     </widget>
     <widget class="QPushButton" name="GuardarCambios">
