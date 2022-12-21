@@ -3,9 +3,9 @@ import os
 import sys
 from PySide6.QtWidgets import QApplication
 from ViewControl import ViewControl
-from PIL import Image as im
 from DataModel import DatosControl
 import sqlite3
+from PySide6.QtCore import QTimer
 
 class ControlModel(ViewControl, DatosControl):
 
@@ -30,10 +30,26 @@ class ControlModel(ViewControl, DatosControl):
         self.conection = sqlite3.connect(self.database_dir + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
+        
+        # creando timer recurrente leer data del dron
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.cargar_datos_dron)
+        self.timer.start(3/2)#segundos 
 
 
     def ArmDisarmButton_dron_evento(self):
         pass
+
+    def GuardarCambios_observaciones_evento(self):
+        estimacion_to_save  = self.get_text_estimacion()
+        self.cursor.execute('INSERT INTO INFORMACION(ESTIMACION) VALUES(:text) WHERE ID == :id',
+                           {"id":self.ID_data_show, "text":estimacion_to_save})
+        self.conection.commit()
+
+    def CancelarCambios_observaciones_evento(self):
+        text_mostrar = self.cursor.execute('SELECT ESTIMACION FROM INFORMACION WHERE ID == :id',
+                                          {"id":self.ID_data_show})
+        self.update_estimacion_show(text_mostrar)
 
     def StartMisionButton_dron_evento(self):
         pass
@@ -47,15 +63,15 @@ class ControlModel(ViewControl, DatosControl):
     def GenerarReporteBotton_detalles_evento(self):
         pass
     def load_data_show(self, index):
-        ID_data_show  = self.imagenes_procesamiento[index].ID_data
+        self.ID_data_show  = self.imagenes_procesamiento[index].ID_data
         data_cursor = self.cursor.execute('SELECT FECHA, HORA, CATEGORIA, AREA, ESTIMACION FROM INFORMACION WHERE ID == :id',
-                                         {"id":ID_data_show})
+                                         {"id":self.ID_data_show})
         self.fecha, self.hora, self.categoria, self.area, self.estimacion = data_cursor.fetchone()
         data_cursor = self.cursor.execute('SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id',
-                                         {"id":ID_data_show})
+                                         {"id":self.ID_data_show})
         self.grados_latitude, self.minutos_latitude, self.segundos_latitude = data_cursor.fetchone()
         data_cursor = self.cursor.execute('SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id',
-                                         {"id":ID_data_show})
+                                         {"id":self.ID_data_show})
         self.grados_longitud, self.minutos_longitud, self.segundos_longitud = data_cursor.fetchone()
 
     def update(self):
@@ -65,8 +81,6 @@ class ControlModel(ViewControl, DatosControl):
                                   "categoria":self.categoria, 
                                   "cordenadas_origen": self.coordenada_url_latitude + ", " + self.coordenada_url_longitud,
                                   "estado": self.estimacion,
-                                  "coord_actual_dron": self.coordenada_url_latitude + ", " + self.coordenada_url_longitud,
-                                  "porc_bat":45,
                                   "area":self.area
                                   })
     def build_url(self):
@@ -91,8 +105,15 @@ class ControlModel(ViewControl, DatosControl):
     def anterior(self):
         if self.index >= 0:
             self.index -= 1
-        return self.index            
-        
+        return self.index   
+         
+    def cargar_datos_dron(self):
+        self.read_actual_coordenates_dron()
+        self.read_battery_dron()
+        self.update_text_labels_dron(**{"coord_actual_dron":self.coordenadas_actual_dron,
+                                        "porc_bat":self.bateria_dron_porc_value})
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ejecucion = ControlModel()

@@ -55,7 +55,7 @@ class Data_Incendio():
         self.ID = 0
         
 
-class Data_SQL(path):
+class Data_SQL(Path):
     def __init__(self):
         Path.__init__(self)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
@@ -105,7 +105,7 @@ class coordenada_data(Path, DumpPumpVariable):
     def __init__(self):
         Path.__init__(self)
         self.value = {"latitude": [0,0,0], "longitud": [0,0,0]}
-        self.variable_name = "coordenadas"
+        self.variable_name = "coordenadas_dron"
         
     def __set__(self, obj, value):
         self.value = value
@@ -115,7 +115,7 @@ class integer_data(Path, DumpPumpVariable):
     def __init__(self):
         Path.__init__(self)
         self.value = 0
-        self.variable_name = "bateria_data"
+        self.variable_name = "bateria_data_dron"
         
     def __set__(self, obj, value):
         self.value = value

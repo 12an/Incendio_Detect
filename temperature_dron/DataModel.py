@@ -88,6 +88,8 @@ class DatosControl(Path, DumpPumpVariable):
         self.read_instricic_camera()
         self.total_incendio = 0
         self.total_fotos_chesspattern = 0
+        self.bateria_dron_porc_value = 0
+        self.coordenadas_actual_dron = {}
 
     def open_(func):
         def inner(self, *arg,**args):
@@ -144,6 +146,8 @@ class DatosControl(Path, DumpPumpVariable):
             print("parece que no se ha guardado")
             print(nothing_in_file)
     def read_battery_dron(self):
-        pass
+        self.bateria_dron_porc_value = self.pump(self.go_to("data_dir"), "bateria_data_dron")
+
     def read_actual_coordenates_dron(self):
-        pass
+        self.coordenadas_actual_dron = self.pump(self.go_to("data_dir"), "coordenadas_dron")
+        

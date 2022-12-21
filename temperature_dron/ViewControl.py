@@ -48,7 +48,6 @@ class ViewControl(Widget):
                                   1,
                                   1)
 
-
     def Show_frames(self, frame, index_layout, scalar = True, bit_image=False):
         try:
             bytesPerLine = frame.shape[1] * frame.shape[2]
@@ -92,9 +91,20 @@ class ViewControl(Widget):
         self.ui.label_cordenadas_origen.setText(str(cordenadas_origen))
         self.ui.label_estado.setText(str(estado))
         self.ui.label_area.setText(str(area))
+
+    def update_text_labels_dron(self,
+                           coord_actual_dron,
+                           porc_bat, 
+                           **args):
         #data dron
         self.ui.coord_actual_lb.setText(str(coord_actual_dron))
         self.ui.porc_bat.setText(str(porc_bat))
+
+    def update_estimacion_show(self, estimacion):
+        self.ui.textEdit.setPlainText(estimacion)
+
+    def get_text_estimacion(self):
+        return self.ui.textEdit.toPlainText()
 
     def show_plot(self, canvas_plot, index_layout):
         self.plot_layout[index_layout].addWidget(canvas_plot,
@@ -103,8 +113,10 @@ class ViewControl(Widget):
 
     def siguiente(self):
         pass
+
     def anterior(self):
         pass
+
     def ArmDisarmButton_dron_evento(self):
         pass
 
@@ -120,6 +132,11 @@ class ViewControl(Widget):
     def GenerarReporteBotton_detalles_evento(self):
         pass
 
+    def GuardarCambios_observaciones_evento(self):
+        pass
+
+    def CancelarCambios_observaciones_evento(self):
+        pass
 
 
 if __name__ == "__main__":
