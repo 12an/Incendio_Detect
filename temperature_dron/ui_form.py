@@ -140,7 +140,10 @@ class Ui_MainWidget(object):
         self.horaEdit.setGeometry(QRect(300, 110, 71, 25))
         self.fechaEdit = QDateEdit(self.Editar)
         self.fechaEdit.setObjectName(u"fechaEdit")
-        self.fechaEdit.setGeometry(QRect(470, 110, 71, 25))
+        self.fechaEdit.setGeometry(QRect(460, 110, 71, 25))
+        self.fechaEdit.setDateTime(QDateTime(QDate(2023, 1, 1), QTime(0, 0, 0)))
+        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2025, 12, 31), QTime(23, 59, 59)))
+        self.fechaEdit.setMinimumDateTime(QDateTime(QDate(2000, 9, 14), QTime(4, 0, 0)))
         self.GuardarCambios = QPushButton(self.Editar)
         self.GuardarCambios.setObjectName(u"GuardarCambios")
         self.GuardarCambios.setGeometry(QRect(220, 510, 191, 41))
@@ -246,7 +249,7 @@ class Ui_MainWidget(object):
 
         self.retranslateUi(MainWidget)
 
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWidget)

@@ -8,12 +8,17 @@ agregar claves a una base de datos existente
 from datetime import datetime
 import sqlite3
 import os
-from cv2 import imwrite
+#from cv2 import imwrite
 import pickle
+
+
+
+    
+
 
 class Path():
     def __init__(self):
-        self.origen_dir = os.path.abspath(os.path.dirname( __file__ ))
+        self.origen_dir = os.path.abspath(os.path.dirname( __name__ ))
         self.current_dir = self.origen_dir
         self.carpetas_dir = {"data_dir" : "data",
                              "foto_dir" : "fotos_analisis",
@@ -33,10 +38,10 @@ class Path():
         self.current_dir = self.current_dir.replace(self.name_actual_carpet,
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
-        return self.current_dir + "/"
+        return self.current_dir + "\\"
         
     def get_actual_dir(self):
-        for key, value in self.carpetas_dir:
+        for key, value in self.carpetas_dir.items():
             if value in self.current_dir:
                 self.name_actual_carpet = value
                 
@@ -44,8 +49,8 @@ class Path():
 class Data_Incendio():
     def __init__(self, foto):
         current_datetime = datetime.now()
-        self.hora = current_datetime.strftime("%H:%M:%S")
-        self.fecha = current_datetime.strftime("%m/%d/%Y")
+        self.hora = current_datetime.strftime("%H:%M")
+        self.fecha = current_datetime.strftime("%m-%d-%Y")
         self.categoria = 0
         self.area = 0
         self.estimacion = "n/a"
@@ -85,7 +90,7 @@ class Data_SQL(Path):
         self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitudtable)
         self.conection.commit()
         #GUARDANDO FOTO
-        imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
+#        imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
 
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
@@ -106,27 +111,32 @@ class coordenada_data(Path, DumpPumpVariable):
         Path.__init__(self)
         self.value = {"latitude": [0,0,0], "longitud": [0,0,0]}
         self.variable_name = "coordenadas_dron"
+
+    def __get__(self, obj, objtype):
+        return self.value
         
     def __set__(self, obj, value):
         self.value = value
-        self.dump(self.go_to("data_dir"), self.variable_name, value)
+        self.dump(self.go_to("data_dir"), self.variable_name, self.value)
 
 class integer_data(Path, DumpPumpVariable):
     def __init__(self):
         Path.__init__(self)
         self.value = 0
         self.variable_name = "bateria_data_dron"
+
+    def __get__(self, obj, objtype):
+        return self.value
         
     def __set__(self, obj, value):
         self.value = value
-        self.dump(self.go_to("data_dir"), self.variable_name, value)
+        
+        self.dump(self.go_to("data_dir"), self.variable_name, self.value)
 
 class DronData():
-    def __init__(self, bateria_porcentage, coordenadas, **args):
-        self.bateria_porcentage = integer_data() 
-        self.coordenadas = coordenada_data()
+    bateria_porcentage = integer_data() 
+    coordenadas = coordenada_data()
         
-
 
 #para pruebas
 if __name__ == "__main__":  
@@ -137,5 +147,4 @@ if __name__ == "__main__":
     cursor = conection.cursor()
     data_row = cursor.execute('SELECT FECHA, HORA FROM INFORMACION WHERE ID == :id',{"id":1})
     max_id = data_row.fetchone()
-
-        
+       

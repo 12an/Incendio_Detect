@@ -3,12 +3,7 @@ import os
 import glob
 from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
-from  TransformFotos import LuminosidadFotos, FiltroFotos, CalibrateFoto, Segmentacion
-from widget import MplCanvas
-import matplotlib
-matplotlib.use('Qt5Agg')
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
+
 
 
 
@@ -24,12 +19,14 @@ class DumpPumpVariable():
             except EOFError as nothing_in_file:
                 print("there is nothing in the file, of data:")
                 print(nothing_in_file)
+            except FileNotFoundError:
+                print("archivo no existe")
             return variable_leida
 
 
 class Path():
     def __init__(self):
-        self.origen_dir = os.path.abspath(os.path.dirname( __file__ ))
+        self.origen_dir = os.path.abspath(os.path.dirname( __name__ ))
         self.current_dir = self.origen_dir
         self.carpetas_dir = {"data_dir" : "data",
                              "foto_dir" : "fotos_analisis",
@@ -49,30 +46,35 @@ class Path():
         self.current_dir = self.current_dir.replace(self.name_actual_carpet,
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
-        return self.current_dir + "/"
+        return self.current_dir + "\\"
         
     def get_actual_dir(self):
-        for key, value in self.carpetas_dir:
+        for key, value in self.carpetas_dir.items():
             if value in self.current_dir:
                 self.name_actual_carpet = value
+class Quantity:
+    def __init__(self, managed_attribute_name):
+        print(f'managing attribute {managed_attribute_name}')
+        self._managed_attribute_name = managed_attribute_name
 
+    def __get__(self, instance, owner):
+        print(f'{self._managed_attribute_name} get')
+        return instance.__dict__[self._managed_attribute_name]
 
+    def __set__(self, instance, value):
+        print(f'{self._managed_attribute_name} set {value}')
+        if value > 0:
+            instance.__dict__[self._managed_attribute_name] = value
+            
 class BoolData(Path, DumpPumpVariable):
     def __init__(self, value, variable_name):
         Path.__init__(self)
-        self.value = False
         self.variable_name = variable_name
+        self.bool_value = value
 
-    def __set__(self, obj, value):
-        self.value = value
-        self.dump(self.go_to("data_dir"), self.variable_name, value)
-
-
-class MplCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+    def setear(self, value):
+        self.bool_value = value
+        self.dump(self.go_to("data_dir"), self.variable_name, self.bool_value )
 
 
 class IncendioData():
@@ -149,11 +151,11 @@ class DatosControl(Path, DumpPumpVariable):
 
     def save_instricic_camera(self):
         self.dump(self.go_to("data_dir"),
-                  "instricic_camera",
+                  "registed_data_instricic",
                   [self.ret, self.mtx, self.dist, self.rvecs, self.tvecs])
 
     def read_instricic_camera(self):
-        packet = self.pump(self.go_to("data_dir"), "instricic_camera")
+        packet = self.pump(self.go_to("data_dir"), "registed_data_instricic")
         try:
             self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = packet
         except ValueError as nothing_in_file:

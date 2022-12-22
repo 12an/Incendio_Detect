@@ -12,16 +12,14 @@ class ControlModel(ViewControl, DatosControl):
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
         self.index = 0
-        self.current_dir = os.path.abspath(os.path.dirname( __file__ ))
         # cargando app
         ViewControl.__init__(self)
-        self.search_cordenates_map()
         #datos
         DatosControl.__init__(self)
-        self.database_dir = self.current_dir.replace("temperature_dron", "data/")
-        self.conection = sqlite3.connect(self.database_dir + 'Data_Incendio.db')
+        self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
+        self.open_foto_analisis(False)
         #control dron
         self.start_mision = BoolData(False, "start_mision")
         self.rtl = BoolData(False, "rtl")
@@ -32,6 +30,8 @@ class ControlModel(ViewControl, DatosControl):
         self.timer = QTimer()
         self.timer.timeout.connect(self.cargar_datos_dron)
         self.timer.start(3/2)#segundos 
+        
+        self.static_index()
 
     def GuardarCambios_observaciones_evento(self):
         estimacion_to_save  = self.get_text_estimacion()
@@ -54,23 +54,25 @@ class ControlModel(ViewControl, DatosControl):
         self.update_hora_show(hora)
 
     def ArmDisarmButton_dron_evento(self):
-        self.arm_disarm.value = not(self.arm_disarm.value)
+        self.arm_disarm.setear(not(self.arm_disarm.bool_value)) 
         
     def StartMisionButton_dron_evento(self):
-        self.start_mision.value = not(self.start_mision.value)
+        self.start_mision.setear(not(self.start_mision.bool_value)) 
 
     def RTLButton_dron_evento(self):
-        self.rtl.value = not(self.rtl.value)
+        self.rtl.setear(not(self.rtl.bool_value)) 
 
     def ManualAutoButton_dron_evento(self):
-        self.manual_automatico.value = not(self.manual_automatico.value)
+        self.manual_automatico.setear(not(self.manual_automatico.bool_value)) 
 
     def GenerarReporteBotton_detalles_evento(self):
         pass
     def load_data_show(self, index):
+        print(index)
         self.ID_data_show  = self.imagenes_procesamiento[index].ID_data
         data_cursor = self.cursor.execute('SELECT FECHA, HORA, CATEGORIA, AREA, ESTIMACION FROM INFORMACION WHERE ID == :id',
                                          {"id":self.ID_data_show})
+        print(data_cursor.fetchone())
         self.fecha, self.hora, self.categoria, self.area, self.estimacion = data_cursor.fetchone()
         data_cursor = self.cursor.execute('SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id',
                                          {"id":self.ID_data_show})
@@ -80,6 +82,7 @@ class ControlModel(ViewControl, DatosControl):
         self.grados_longitud, self.minutos_longitud, self.segundos_longitud = data_cursor.fetchone()
 
     def update(self):
+        print(self.url_from_data)
         self.search_cordenates_map(self.url_from_data)
         self.update_text_labels(*[],
                                 **{"fecha_hora_inicio": self.fecha +"/" + self.hora,
@@ -99,7 +102,9 @@ class ControlModel(ViewControl, DatosControl):
             index = func(self, *arg,**args)
             self.load_data_show(index)
             self.build_url()
-            self.update()
+            self.update() 
+            print("jfa")
+        return innner
             
     @chage_index
     def siguiente(self):
@@ -110,12 +115,21 @@ class ControlModel(ViewControl, DatosControl):
     def anterior(self):
         if self.index >= 0:
             self.index -= 1
-        return self.index   
+        return self.index
+
+    @chage_index
+    def static_index(self):
+        print ("cargando datos inicial")
+        return self.index
          
     def cargar_datos_dron(self):
         self.read_actual_coordenates_dron()
         self.read_battery_dron()
-        self.update_text_labels_dron(**{"coord_actual_dron":self.coordenadas_actual_dron,
+        latitud = self.coordenadas_actual_dron.get("latitude")
+        longitud = self.coordenadas_actual_dron.get("longitud")
+        latitud_text = str(latitud[0]) + "°"  + str(latitud[1]) + "'" + str(latitud[2]) + '" N'
+        longitud_text = str(longitud[0]) + "°"  + str(longitud[1]) + "'" + str(longitud[2]) + '" W'
+        self.update_text_labels_dron(**{"coord_actual_dron":latitud_text + ", " + longitud_text,
                                         "porc_bat":self.bateria_dron_porc_value})
 
 

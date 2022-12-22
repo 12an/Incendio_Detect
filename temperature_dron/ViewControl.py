@@ -97,7 +97,7 @@ class ViewControl(Widget):
                            **args):
         #data dron
         self.ui.coord_actual_lb.setText(str(coord_actual_dron))
-        self.ui.porc_bat.setText(str(porc_bat))
+        self.ui.porc_bat.setText(str(porc_bat) + "%")
         
     def update_hora_show(self, hora):
         qdate = QDate.fromString(hora, "HH:mm")
