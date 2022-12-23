@@ -30,7 +30,7 @@
     <enum>QTabWidget::Triangular</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="elideMode">
     <enum>Qt::ElideMiddle</enum>
@@ -324,49 +324,48 @@
       <rect>
        <x>300</x>
        <y>110</y>
-       <width>71</width>
+       <width>81</width>
        <height>25</height>
       </rect>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
     <widget class="QDateEdit" name="fechaEdit">
      <property name="geometry">
       <rect>
-       <x>460</x>
+       <x>440</x>
        <y>110</y>
-       <width>71</width>
+       <width>101</width>
        <height>25</height>
       </rect>
      </property>
-     <property name="dateTime">
-      <datetime>
-       <hour>0</hour>
-       <minute>0</minute>
-       <second>0</second>
-       <year>2023</year>
-       <month>1</month>
-       <day>1</day>
-      </datetime>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
      <property name="maximumDateTime">
       <datetime>
        <hour>23</hour>
        <minute>59</minute>
        <second>59</second>
-       <year>2025</year>
-       <month>12</month>
-       <day>31</day>
+       <year>2026</year>
+       <month>1</month>
+       <day>1</day>
       </datetime>
      </property>
      <property name="minimumDateTime">
       <datetime>
-       <hour>4</hour>
+       <hour>0</hour>
        <minute>0</minute>
        <second>0</second>
        <year>2000</year>
        <month>9</month>
        <day>14</day>
       </datetime>
+     </property>
+     <property name="displayFormat">
+      <string>M-d-yyyy</string>
      </property>
     </widget>
     <widget class="QPushButton" name="GuardarCambios">
@@ -463,7 +462,7 @@
     <widget class="QLabel" name="label_FECHA_OBSERVACIONES">
      <property name="geometry">
       <rect>
-       <x>420</x>
+       <x>400</x>
        <y>120</y>
        <width>41</width>
        <height>16</height>

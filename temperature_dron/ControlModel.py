@@ -37,6 +37,7 @@ class ControlModel(ViewControl, DatosControl):
         estimacion_to_save  = self.get_text_estimacion()
         hora_to_save = self.get_hora_estimacion()
         fecha_to_save = self.get_fecha_estimacion()
+        print(hora_to_save, fecha_to_save)
         self.cursor.execute('INSERT INTO INFORMACION(FECHA, HORA, ESTIMACION) VALUES(:text, :"hora", "fecha") WHERE ID == :id',
                            {"id":self.ID_data_show,
                             "text":estimacion_to_save,
@@ -45,13 +46,9 @@ class ControlModel(ViewControl, DatosControl):
         self.conection.commit()
 
     def CancelarCambios_observaciones_evento(self):
-        data_row = self.cursor.execute('SELECT FECHA, HORA, ESTIMACION FROM INFORMACION WHERE ID == :id',
-                                          {"id":self.ID_data_show})
-        fecha, hora, estimacion = data_row.fetchone()
-        
-        self.update_estimacion_show(estimacion)
-        self.update_fecha_show(fecha)
-        self.update_hora_show(hora)
+        self.update_estimacion_show(self.estimacion)
+        self.update_fecha_show(self.fecha)
+        self.update_hora_show(self.hora)
 
     def ArmDisarmButton_dron_evento(self):
         self.arm_disarm.setear(not(self.arm_disarm.bool_value)) 
@@ -68,11 +65,9 @@ class ControlModel(ViewControl, DatosControl):
     def GenerarReporteBotton_detalles_evento(self):
         pass
     def load_data_show(self, index):
-        print(index)
         self.ID_data_show  = self.imagenes_procesamiento[index].ID_data
         data_cursor = self.cursor.execute('SELECT FECHA, HORA, CATEGORIA, AREA, ESTIMACION FROM INFORMACION WHERE ID == :id',
                                          {"id":self.ID_data_show})
-        print(data_cursor.fetchone())
         self.fecha, self.hora, self.categoria, self.area, self.estimacion = data_cursor.fetchone()
         data_cursor = self.cursor.execute('SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id',
                                          {"id":self.ID_data_show})
@@ -91,6 +86,8 @@ class ControlModel(ViewControl, DatosControl):
                                   "estado": self.estimacion,
                                   "area":self.area
                                   })
+        self.CancelarCambios_observaciones_evento()
+        
     def build_url(self):
         semi_url_domain = "https://www.google.com/maps/place/"
         self.coordenada_url_latitude = str(self.grados_latitude) + "°" + str(self.minutos_latitude) + "'" + str(self.segundos_latitude) + '"' + "N"
@@ -103,17 +100,16 @@ class ControlModel(ViewControl, DatosControl):
             self.load_data_show(index)
             self.build_url()
             self.update() 
-            print("jfa")
         return innner
             
     @chage_index
     def siguiente(self):
-        if self.index < self.total_incendio:
+        if self.index < (self.total_incendio - 1):
             self.index += 1
         return self.index
     @chage_index
     def anterior(self):
-        if self.index >= 0:
+        if self.index > 0:
             self.index -= 1
         return self.index
 

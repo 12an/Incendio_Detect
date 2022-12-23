@@ -113,8 +113,8 @@ class DatosControl(Path, DumpPumpVariable):
             path, tipo_imagen = func(self, *arg,**args)
             for path_name_foto in glob.iglob(path + "\*.jpg"):
                 #al path le quitamos el nombre del archiv0
-                name_foto = path_name_foto[len(path) + 1 : ]
-                ID_data = name_foto[0:name_foto.find("_")]
+                name_foto = path_name_foto[len(path) : ]               
+                ID_data = name_foto[:-4]
                 imagen = cvtColor(imread(path_name_foto), COLOR_RGB2BGR)
                 if(tipo_imagen==1):
                     self.total_incendio += 1

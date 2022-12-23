@@ -2,7 +2,7 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QLabel
-from PySide6.QtCore import Qt, QUrl, QDate
+from PySide6.QtCore import Qt, QUrl, QDate, QTime
 from PySide6 import QtGui
 from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWebEngineCore import *
@@ -28,6 +28,8 @@ class ViewControl(Widget):
         self.ui.GenerarReporteBotton_detalles.clicked.connect(self.GenerarReporteBotton_detalles_evento)
         self.ui.SiguienteCordenadaBotton_detalles.clicked.connect(self.siguiente)
         self.ui.AnteriorCordenadaBotton_detalles.clicked.connect(self.anterior)
+        self.ui.CancelarCambios.clicked.connect(self.CancelarCambios_observaciones_evento)
+        self.ui.GuardarCambios.clicked.connect(self.GuardarCambios_observaciones_evento)
         # imagen 3d
         self.plot_layout = list()
         self.plot_layout.append(self.ui.mapa_3d)
@@ -80,9 +82,7 @@ class ViewControl(Widget):
                            categoria,
                            cordenadas_origen,
                            area,
-                           estado,
-                           coord_actual_dron,
-                           porc_bat, 
+                           estado, 
                            **args):
         #detalles fuego
         self.ui.label_fecha_inicio.setText(str(fecha_hora_inicio))
@@ -100,8 +100,8 @@ class ViewControl(Widget):
         self.ui.porc_bat.setText(str(porc_bat) + "%")
         
     def update_hora_show(self, hora):
-        qdate = QDate.fromString(hora, "HH:mm")
-        self.ui.horaEdit.setTime(qdate)
+        qtime = QTime.fromString(hora, "HH:mm")
+        self.ui.horaEdit.setTime(qtime)
 
     def get_hora_estimacion(self):
         curent_t = self.ui.horaEdit.currentTime()
@@ -109,7 +109,7 @@ class ViewControl(Widget):
         return curent_t.toString()
         
     def update_fecha_show(self, fecha):
-        qdate = QDate.fromString(fecha, "d-MMM-yyyy")
+        qdate = QDate.fromString(fecha, "dd-MM-yyyy")
         self.ui.fechaEdit.setDate(qdate)
 
     def get_fecha_estimacion(self):
