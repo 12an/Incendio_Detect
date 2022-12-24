@@ -140,11 +140,6 @@ class DronData():
 
 #para pruebas
 if __name__ == "__main__":  
-    current_dir = os.path.abspath(os.path.dirname( __file__ ))
-    data_dir = current_dir.replace("code_dron", "data/")
-    foto_dir = current_dir.replace("code_dron", "fotos_analisis/")
-    conection = sqlite3.connect(data_dir + 'Data_Incendio.db')
-    cursor = conection.cursor()
-    data_row = cursor.execute('SELECT FECHA, HORA FROM INFORMACION WHERE ID == :id',{"id":1})
-    max_id = data_row.fetchone()
+    text_path = Path()
+    read_bool = DumpPumpVariable().pump(text_path.go_to("data_dir"), "start_mision")
        

@@ -37,8 +37,7 @@ class ControlModel(ViewControl, DatosControl):
         estimacion_to_save  = self.get_text_estimacion()
         hora_to_save = self.get_hora_estimacion()
         fecha_to_save = self.get_fecha_estimacion()
-        print(hora_to_save, fecha_to_save)
-        self.cursor.execute('INSERT INTO INFORMACION(FECHA, HORA, ESTIMACION) VALUES(:text, :"hora", "fecha") WHERE ID == :id',
+        self.cursor.execute('UPDATE INFORMACION SET FECHA=:fecha, HORA=:hora, ESTIMACION=:text WHERE ID == :id',
                            {"id":self.ID_data_show,
                             "text":estimacion_to_save,
                             "hora":hora_to_save,
@@ -79,13 +78,13 @@ class ControlModel(ViewControl, DatosControl):
     def update(self):
         print(self.url_from_data)
         self.search_cordenates_map(self.url_from_data)
-        self.update_text_labels(*[],
-                                **{"fecha_hora_inicio": self.fecha +"/" + self.hora,
-                                  "categoria":self.categoria, 
-                                  "cordenadas_origen": self.coordenada_url_latitude + ", " + self.coordenada_url_longitud,
-                                  "estado": self.estimacion,
-                                  "area":self.area
-                                  })
+        self.update_text(*[],
+                         **{"fecha_hora_inicio": self.fecha +", " + self.hora,
+                         "categoria":self.categoria, 
+                         "cordenadas_origen": self.coordenada_url_latitude + ", " + self.coordenada_url_longitud,
+                         "estado": self.estimacion,
+                         "area":self.area
+                         })
         self.CancelarCambios_observaciones_evento()
         
     def build_url(self):

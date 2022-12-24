@@ -77,19 +77,19 @@ class ViewControl(Widget):
     def search_cordenates_map(self, cordenada):
         self.web_view.load(QUrl(cordenada))
         self.web_view.show()
-    def update_text_labels(self,
-                           fecha_hora_inicio,
-                           categoria,
-                           cordenadas_origen,
-                           area,
-                           estado, 
-                           **args):
+    def update_text(self,
+                    fecha_hora_inicio,
+                    categoria,
+                    cordenadas_origen,
+                    area,
+                    estado, 
+                    **args):
         #detalles fuego
         self.ui.label_fecha_inicio.setText(str(fecha_hora_inicio))
         self.ui.label_categoria.setText(str(categoria))
         self.ui.label_cordenadas_origen.setText(str(cordenadas_origen))
-        self.ui.label_estado.setText(str(estado))
-        self.ui.label_area.setText(str(area))
+        self.ui.label_area.setText(str(area) + " M2")
+        self.ui.textBrowser.setText(str(estado))
 
     def update_text_labels_dron(self,
                            coord_actual_dron,
@@ -104,16 +104,17 @@ class ViewControl(Widget):
         self.ui.horaEdit.setTime(qtime)
 
     def get_hora_estimacion(self):
-        curent_t = self.ui.horaEdit.currentTime()
+        curent_t = self.ui.horaEdit.time()
         #  HH:MM:SS  , eg 10:45:28
-        return curent_t.toString()
+        return curent_t.toString("HH:mm")
         
     def update_fecha_show(self, fecha):
         qdate = QDate.fromString(fecha, "dd-MM-yyyy")
         self.ui.fechaEdit.setDate(qdate)
 
     def get_fecha_estimacion(self):
-        return self.ui.fechaEdit.date().toPyDate()
+        curent_d = self.ui.fechaEdit.date()
+        return curent_d.toString("dd-MM-yyyy")
     
     def update_estimacion_show(self, estimacion):
         self.ui.textEdit.setPlainText(estimacion)

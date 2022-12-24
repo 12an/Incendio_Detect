@@ -150,6 +150,7 @@ fotos_analisis/
 
 # archivos
 *.ui.autosave
+*.pkl
 
 # PyCharm
 #  JetBrains specific template is maintainted in a separate JetBrains.gitignore that can
