@@ -8,13 +8,8 @@ agregar claves a una base de datos existente
 from datetime import datetime
 import sqlite3
 import os
-#from cv2 import imwrite
+from cv2 import imwrite
 import pickle
-
-
-
-    
-
 
 class Path():
     def __init__(self):
@@ -44,7 +39,6 @@ class Path():
         for key, value in self.carpetas_dir.items():
             if value in self.current_dir:
                 self.name_actual_carpet = value
-                
 
 class Data_Incendio():
     def __init__(self, foto):
@@ -58,7 +52,6 @@ class Data_Incendio():
         self.longitud = {"grados":0, "minutos":0, "segundos":0}
         self.foto = foto
         self.ID = 0
-        
 
 class Data_SQL(Path):
     def __init__(self):
@@ -91,7 +84,7 @@ class Data_SQL(Path):
         self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitudtable)
         self.conection.commit()
         #GUARDANDO FOTO
-#        imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
+        imwrite(self.foto_dir + str(max_id) + ".png", instance_data_incendio.foto)
 
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
@@ -137,11 +130,13 @@ class integer_data(Path, DumpPumpVariable):
 class DronData():
     bateria_porcentage = integer_data() 
     coordenadas = coordenada_data()
-        
 
 #para pruebas
 if __name__ == "__main__":
     text_path = Path()
+    dron_variables = DronData()
+    dron_variables.bateria_porcentage = 78
+    dron_variables.coordenadas = {"latitude": [0,0,0], "longitud": [0,0,0]}
     datos_sql = Data_SQL()
     FOTO = "aqui va la foto"
     read_bool = DumpPumpVariable().pump(text_path.go_to("data_dir"), "start_mision")
