@@ -77,6 +77,7 @@ class Data_SQL(Path):
         self.conection.commit()
         self.data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
         max_id = self.data_row.fetchone()[0]
+        instance_data_incendio.ID = max_id
         data_latitudetable = (max_id,
                              instance_data_incendio.latitude.get("grados"),
                              instance_data_incendio.latitude.get("minutos"),
@@ -139,7 +140,19 @@ class DronData():
         
 
 #para pruebas
-if __name__ == "__main__":  
+if __name__ == "__main__":
     text_path = Path()
+    datos_sql = Data_SQL()
+    FOTO = "aqui va la foto"
     read_bool = DumpPumpVariable().pump(text_path.go_to("data_dir"), "start_mision")
+    incendio1 = Data_Incendio(FOTO)
+    #la hora y fecha se carga automatico al momento de crear el incendio
+    # el ID no se modifica (se configura automaticamente al guardar el incendio)
+    #solo se agrega la coordenada, el resto de la informacion se genera en la app
+    incendio1.latitude = {"grados":0, "minutos":0, "segundos":0}
+    incendio1.longitud = {"grados":0, "minutos":0, "segundos":0}
+    # se agrega informacion a ese incendio
+    datos_sql.guardar_datos(incendio1)
+    
+    
        
