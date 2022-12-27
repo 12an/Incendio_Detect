@@ -149,9 +149,9 @@ cython_debug/
 /fotos_analisis/
 
 # archivos
-/temperature_dron/*.ui.autosave
-/data/*.pkl
-/temperature_dron/*.pyproject.user
+temperature_dron/*.ui.autosave
+data/*.pkl
+temperature_dron/*.pyproject.user
 # PyCharm
 #  JetBrains specific template is maintainted in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
