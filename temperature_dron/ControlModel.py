@@ -25,12 +25,15 @@ class ControlModel(ViewControl, DatosControl):
         self.rtl = BoolData(False, "rtl")
         self.manual_automatico = BoolData(False, "manual_automatico")
         self.arm_disarm = BoolData(False, "arm_disarm")
-        
         # creando timer recurrente leer data del dron
         self.timer = QTimer()
         self.timer.timeout.connect(self.cargar_datos_dron)
-        self.timer.start(3/2)#segundos 
-        
+        self.timer.start(3/2)#segundos
+        # creando timer recurrente leer y procesar fotos
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.nueva_mision_dron_app)
+        self.timer.start(0.25)#segundos
+        #iniciando desde el indixe 0 en los datos
         self.static_index()
 
     def GuardarCambios_observaciones_evento(self):
@@ -127,7 +130,8 @@ class ControlModel(ViewControl, DatosControl):
         self.update_text_labels_dron(**{"coord_actual_dron":latitud_text + ", " + longitud_text,
                                         "porc_bat":self.bateria_dron_porc_value})
 
-
+    def nueva_mision_dron_app(self):
+        pass
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ejecucion = ControlModel()

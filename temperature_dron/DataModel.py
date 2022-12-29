@@ -84,6 +84,9 @@ class IncendioData():
                  **args):
         self.ID_data = ID_data
         self.foto_camara = foto_camara
+        self.foto_fitro = None
+        self.foto_undistorted = None
+        self.matrix_foto = None
 
 
 class FotoChesspatternData():
@@ -92,15 +95,20 @@ class FotoChesspatternData():
         self.agregada = False
         self.foto = foto
 
+class CameraIntrics():
+    self.ret = ret
+    self.mtx = mtx
+    self.dist = dist
+    self.rvecs = rvecs
+    self.tvecs = tvecs
 
-class DatosControl(Path, DumpPumpVariable):
+class DatosControl(Path, DumpPumpVariable, CameraIntrics):
 
     def __init__(self):
         Path.__init__(self)
         print("inicializando DatosControl ")
         self.imagenes_chesspattern = list()
         self.imagenes_procesamiento = list()
-        self.camera_instriscic = list()
         self.read_instricic_camera()
         self.total_incendio = 0
         self.total_fotos_chesspattern = 0
