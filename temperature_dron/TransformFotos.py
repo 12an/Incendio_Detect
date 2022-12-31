@@ -18,6 +18,26 @@ class FiltroFotos:
             for j in range(0, self.foto_.shape[1]):
                 self.histo_bilater[self.foto_[i,j]] = self.histo_bilater[self.foto_[i,j]] + 1
 
+
+class TemperaturaMax:
+    def __init__(self, temp_trigger):
+        self.temp_trigger = temp_trigger
+
+    def is_max_trigger_foto(self, foto):
+        max = 0
+        for i in range(0, foto.shape[0], 2):
+            for j in range(0, foto.shape[1], 2):
+                if foto[i,j] > max:
+                    max = foto[i,j]
+        if max>=self.temp_trigger:
+            return True
+        else:
+            return False
+
+class RGBToTemperatureScale:
+    def __init__(self):
+        self.
+        
 class CalibrateFoto():
     def __init__(self, foto,
                  mtx,

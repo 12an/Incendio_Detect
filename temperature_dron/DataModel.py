@@ -32,7 +32,8 @@ class Path():
                              "foto_dir" : "fotos_analisis",
                              "dron_dir" : "code_dron",
                              "chess_dir" : "fotos_chess_pattern",
-                             "main_dir" : "temperature_dron"}
+                             "main_dir" : "temperature_dron",
+                             "fotos_spam_dir" : "fotos_analisis\\fotos_spam",}
         self.get_actual_dir()
     """
     optener data con una key relacionada al diccionario
@@ -43,7 +44,7 @@ class Path():
                              "main_dir" : "temperature_dron"}
     """
     def go_to(self, key):
-        self.current_dir = self.current_dir.replace(self.name_actual_carpet,
+        self.current_dir = self.current_dir.replace(self.name_actual_carpet + "\\",
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
         return self.current_dir + "\\"
@@ -87,6 +88,7 @@ class IncendioData():
         self.foto_fitro = None
         self.foto_undistorted = None
         self.matrix_foto = None
+        self.foto_temperatura_scaled = None
 
 
 class FotoChesspatternData():
@@ -96,16 +98,18 @@ class FotoChesspatternData():
         self.foto = foto
 
 class CameraIntrics():
-    self.ret = ret
-    self.mtx = mtx
-    self.dist = dist
-    self.rvecs = rvecs
-    self.tvecs = tvecs
+    def __init__(self):
+        self.ret = None
+        self.mtx = None
+        self.dist = None
+        self.rvecs = None
+        self.tvecs = None
 
 class DatosControl(Path, DumpPumpVariable, CameraIntrics):
 
     def __init__(self):
         Path.__init__(self)
+        CameraIntrics.__init__(self)
         print("inicializando DatosControl ")
         self.imagenes_chesspattern = list()
         self.imagenes_procesamiento = list()
@@ -171,7 +175,15 @@ class DatosControl(Path, DumpPumpVariable, CameraIntrics):
             print(nothing_in_file)
     def read_battery_dron(self):
         self.bateria_dron_porc_value = self.pump(self.go_to("data_dir"), "bateria_data_dron")
+        return self.bateria_dron_porc_value
 
     def read_actual_coordenates_dron(self):
         self.coordenadas_actual_dron = self.pump(self.go_to("data_dir"), "coordenadas_dron")
-        
+        return self.coordenadas_actual_dron
+
+    def status_mision(self):
+        self.mision_status = self.pump(self.go_to("data_dir"), "mision_status")
+        return self.mision_status
+
+    def foto_spam(self):
+        return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.png"), COLOR_RGB2BGR)

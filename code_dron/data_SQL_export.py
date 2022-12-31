@@ -127,6 +127,20 @@ class integer_data(Path, DumpPumpVariable):
         
         self.dump(self.go_to("data_dir"), self.variable_name, self.value)
 
+class bool_data(Path, DumpPumpVariable):
+    def __init__(self):
+        Path.__init__(self)
+        self.value = False
+        self.variable_name = "mision_status"
+
+    def __get__(self, obj, objtype):
+        return self.value
+        
+    def __set__(self, obj, value):
+        self.value = value
+        
+        self.dump(self.go_to("data_dir"), self.variable_name, self.value)
+
 class DronData():
     bateria_porcentage = integer_data() 
     coordenadas = coordenada_data()

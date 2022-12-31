@@ -7,7 +7,7 @@ from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
 
-class ControlModel(ViewControl, DatosControl):
+class ControlModel(ViewControl, DatosControl, TemperaturaMax):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
@@ -16,6 +16,7 @@ class ControlModel(ViewControl, DatosControl):
         ViewControl.__init__(self)
         #datos
         DatosControl.__init__(self)
+        TemperaturaMax.__init__(self, 120)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
@@ -119,7 +120,7 @@ class ControlModel(ViewControl, DatosControl):
     def static_index(self):
         print ("cargando datos inicial")
         return self.index
-         
+
     def cargar_datos_dron(self):
         self.read_actual_coordenates_dron()
         self.read_battery_dron()
@@ -131,7 +132,10 @@ class ControlModel(ViewControl, DatosControl):
                                         "porc_bat":self.bateria_dron_porc_value})
 
     def nueva_mision_dron_app(self):
-        pass
+        if(self.status_mision()):
+            if self.is_max_trigger_foto(self.foto_spam()):
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ejecucion = ControlModel()
