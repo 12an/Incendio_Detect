@@ -6,8 +6,13 @@ from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
+from TransformFotos import RGBToTemperatureScale
+from datetime import datetime
 
-class ControlModel(ViewControl, DatosControl, TemperaturaMax):
+class ControlModel(ViewControl, 
+                   DatosControl, 
+                   TemperaturaMax,
+                   RGBToTemperatureScale):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
@@ -17,6 +22,7 @@ class ControlModel(ViewControl, DatosControl, TemperaturaMax):
         #datos
         DatosControl.__init__(self)
         TemperaturaMax.__init__(self, 120)
+        RGBToTemperatureScale.__init__(self)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
@@ -41,12 +47,9 @@ class ControlModel(ViewControl, DatosControl, TemperaturaMax):
         estimacion_to_save  = self.get_text_estimacion()
         hora_to_save = self.get_hora_estimacion()
         fecha_to_save = self.get_fecha_estimacion()
-        self.cursor.execute('UPDATE INFORMACION SET FECHA=:fecha, HORA=:hora, ESTIMACION=:text WHERE ID == :id',
-                           {"id":self.ID_data_show,
-                            "text":estimacion_to_save,
-                            "hora":hora_to_save,
-                            "fecha":fecha_to_save})
-        self.conection.commit()
+        self.update_hora({"hora":hora_to_save})
+        self.update_fecha({"fecha":fecha_to_save})
+        self.update_estimacion({"text":estimacion_to_save})
 
     def CancelarCambios_observaciones_evento(self):
         self.update_estimacion_show(self.estimacion)
@@ -67,17 +70,17 @@ class ControlModel(ViewControl, DatosControl, TemperaturaMax):
 
     def GenerarReporteBotton_detalles_evento(self):
         pass
+
     def load_data_show(self, index):
         self.ID_data_show  = self.imagenes_procesamiento[index].ID_data
-        data_cursor = self.cursor.execute('SELECT FECHA, HORA, CATEGORIA, AREA, ESTIMACION FROM INFORMACION WHERE ID == :id',
-                                         {"id":self.ID_data_show})
-        self.fecha, self.hora, self.categoria, self.area, self.estimacion = data_cursor.fetchone()
-        data_cursor = self.cursor.execute('SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id',
-                                         {"id":self.ID_data_show})
-        self.grados_latitude, self.minutos_latitude, self.segundos_latitude = data_cursor.fetchone()
-        data_cursor = self.cursor.execute('SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id',
-                                         {"id":self.ID_data_show})
-        self.grados_longitud, self.minutos_longitud, self.segundos_longitud = data_cursor.fetchone()
+        self.ID_actual_sql_management = self.ID_data_show
+        self.fecha = self.fecha()
+        self.hora = self.hora()
+        self.categoria = self.categoria()
+        self.area = self.area()
+        self.estimacion = self.estimacion()
+        self.grados_latitude, self.minutos_latitude, self.segundos_latitude = self.latitude()
+        self.grados_longitud, self.minutos_longitud, self.segundos_longitud = self.longitude()
 
     def update(self):
         print(self.url_from_data)
@@ -102,7 +105,12 @@ class ControlModel(ViewControl, DatosControl, TemperaturaMax):
             index = func(self, *arg,**args)
             self.load_data_show(index)
             self.build_url()
-            self.update() 
+            self.update()
+            if isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, None):
+                self.imagenes_procesamiento[index].foto_temperatura_scaled = self.imagenes_procesamiento[index].foto_camara
+                for i in self.imagenes_procesamiento[index].foto_camara.shape[0]:
+                    for j in self.imagenes_procesamiento[index].foto_camara.shape[1]:
+                        self.imagenes_procesamiento[index].foto_temperatura_scaled = self.fit_RGB_temp(self.imagenes_procesamiento[index].foto_camara[i,j])
         return innner
             
     @chage_index
@@ -133,8 +141,30 @@ class ControlModel(ViewControl, DatosControl, TemperaturaMax):
 
     def nueva_mision_dron_app(self):
         if(self.status_mision()):
-            if self.is_max_trigger_foto(self.foto_spam()):
+            foto = self.foto_spam()
+            foto_temp = self.from_RGB_to_temp(foto)
+            if self.is_max_trigger_foto(foto_temp):
+                current_datetime = datetime.now()
+                hora = current_datetime.strftime("%H:%M")
+                fecha = current_datetime.strftime("%m-%d-%Y")
+                latitud = self.coordenadas_actual_dron.get("latitude")
+                longitud = self.coordenadas_actual_dron.get("longitud")
+                self.guardar_nuevo_incendio_datos(**{"fecha":fecha,
+                                                     "hora":hora,
+                                                     "categoria":0,
+                                                     "area":0,
+                                                     "estimacion":"n/a",
+                                                     "latitude":{"grados":latitud[0], "minutos":latitud[1], "seundos":latitud[2]},
+                                                     "longitud":{"grados":longitud[0], "minutos":longitud[1], "seundos":longitud[2]},
+                                                     "foto_normal":foto})
+                #update fotos list
+                self.open_foto_analisis()
 
+    def from_RGB_to_temp(self, foto_temp):
+        for i in foto_temp.shape[0]:
+            for j in foto_temp.shape[1]:
+                foto_temp[i,j] = self.fit_RGB_temp(foto_temp[i,j])
+        return foto_temp
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

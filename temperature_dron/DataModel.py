@@ -5,8 +5,6 @@ from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
 
 
-
-
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
         with open(directorio + variable_name + ".pkl" , "wb") as saving:
@@ -53,6 +51,8 @@ class Path():
         for key, value in self.carpetas_dir.items():
             if value in self.current_dir:
                 self.name_actual_carpet = value
+
+
 class Quantity:
     def __init__(self, managed_attribute_name):
         print(f'managing attribute {managed_attribute_name}')
@@ -66,7 +66,8 @@ class Quantity:
         print(f'{self._managed_attribute_name} set {value}')
         if value > 0:
             instance.__dict__[self._managed_attribute_name] = value
-            
+
+
 class BoolData(Path, DumpPumpVariable):
     def __init__(self, value, variable_name):
         Path.__init__(self)
@@ -91,11 +92,124 @@ class IncendioData():
         self.foto_temperatura_scaled = None
 
 
+class Data_SQL(Path):
+    def __init__(self):
+        Path.__init__(self)
+        self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
+        ## Creating cursor object and namimg it as cursor
+        self.cursor = self.conection.cursor()
+        self.ID_actual_sql_management = 0
+
+    def get_max_id(self):
+        self.data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
+        return max_id self.data_row.fetchone()[0]
+         
+    def guardar_nuevo_incendio_datos(self,
+                                     fecha,
+                                     hora,
+                                     categoria,
+                                     area,
+                                     estimacion,
+                                     latitude,
+                                     longitud,
+                                     foto_normal,
+                                     **{}):
+        informacion_row = (fecha, hora, categoria, area, estimacion)
+        self.cursor.execute("INSERT INTO INFORMACION(FECHA, HORA, CATEGORIA, AREA, ESTIMACION) VALUES(?,?,?,?,?)", informacion_row)
+        self.conection.commit()
+        max_id = self.get_max_id()
+        data_latitude_row = (max_id,
+                             latitude.get("grados"),
+                             latitude.get("minutos"),
+                             latitude.get("segundos"))
+        data_longitud_row = (max_id,
+                             longitud.get("grados"),
+                             longitud.get("minutos"),
+                             longitud.get("segundos"))
+        self.cursor.execute("INSERT INTO COORDENADA_LATITUDE(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_latitudetable)
+        self.conection.commit()
+        self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitudtable)
+        self.conection.commit()
+        #GUARDANDO FOTO
+        imwrite(self.go_to("foto_dir") + str(max_id) + ".png", foto_normal)
+
+    def update(func):
+        def inner(self, *arg, **args):
+            query, data = func(self, *arg, **args)
+            self.cursor.execute(query, data)
+            self.conection.commit()
+        return inner
+
+    def leer():
+        def inner(self, *arg, **args):
+            query = func(self, *arg, **args)
+            data_cursor = self.cursor.execute(query, {"id":self.ID_data_show})
+            return data_cursor.fetchone()
+        return inner
+
+        @update
+    def update_hora(self, value):
+        return 'UPDATE  INFORMACION SET HORA=:hora WHERE ID == :id', value
+
+        @update
+    def update_fecha(self, value):
+        return 'UPDATE INFORMACION SET FECHA=:fecha WHERE ID == :id', value
+
+        @update
+    def update_latitude(self, value):
+        return 'UPDATE COORDENADA_LATITUDE SET GRADOS=:grados, MINUTOS=:minutos, SEGUNDOS=:segundos WHERE ID == :id', value
+
+        @update
+    def update_longitude(self, value):
+        return 'UPDATE COORDENADAS_LONGITUD SET GRADOS=:grados, MINUTOS=:minutos, SEGUNDOS=:segundos WHERE ID == :id', value
+
+        @update
+    def update_categoria(self, value):
+        return 'UPDATE INFORMACION SET CATEGORIA=:cateoria WHERE ID == :id', value
+
+        @update
+    def update_area(self, value):
+        return 'UPDATE INFORMACION SET AREA=:area WHERE ID == :id', value
+
+        @update
+    def update_estimacion(self, value):
+        return 'UPDATE INFORMACION SET ESTIMACION=:text WHERE ID == :id', value
+
+        @leer
+    def hora(self):
+        return 'SELECT HORA FROM INFORMACION WHERE ID == :id'
+
+        @leer
+    def fecha(self):
+        return 'SELECT FECHA FROM INFORMACION WHERE ID == :id'
+
+        @leer
+    def latitude(self):
+        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id'
+
+        @leer
+    def longitude(self):
+        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id'
+
+        @leer
+    def categoria(self):
+        return 'SELECT CATEGORIA FROM INFORMACION WHERE ID == :id'
+
+        @leer
+    def area(self):
+        return 'SELECT AREA FROM INFORMACION WHERE ID == :id'
+
+        @leer
+    def estimacion(self):
+        return 'SELECT ESTIMACION FROM INFORMACION WHERE ID == :id'
+
+
 class FotoChesspatternData():
     def __init__(self, id_foto, foto):
         self.id_foto = id_foto
         self.agregada = False
         self.foto = foto
+
 
 class CameraIntrics():
     def __init__(self):
@@ -105,11 +219,15 @@ class CameraIntrics():
         self.rvecs = None
         self.tvecs = None
 
-class DatosControl(Path, DumpPumpVariable, CameraIntrics):
 
+class DatosControl(Path,
+                   DumpPumpVariable,
+                   CameraIntrics,
+                   Data_SQL):
     def __init__(self):
         Path.__init__(self)
         CameraIntrics.__init__(self)
+        Data_SQL.__init__(self)
         print("inicializando DatosControl ")
         self.imagenes_chesspattern = list()
         self.imagenes_procesamiento = list()
@@ -158,6 +276,7 @@ class DatosControl(Path, DumpPumpVariable, CameraIntrics):
 
     def get_registed_camera_instricic(self, path = False):
         pass
+
     def save_registed_camera_instricic(self, ):
         pass
 
@@ -173,6 +292,7 @@ class DatosControl(Path, DumpPumpVariable, CameraIntrics):
         except ValueError as nothing_in_file:
             print("parece que no se ha guardado")
             print(nothing_in_file)
+
     def read_battery_dron(self):
         self.bateria_dron_porc_value = self.pump(self.go_to("data_dir"), "bateria_data_dron")
         return self.bateria_dron_porc_value

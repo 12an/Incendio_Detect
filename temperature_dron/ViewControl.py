@@ -49,30 +49,24 @@ class ViewControl(Widget):
         self.ui.web_mapa.addWidget(self.web_view,
                                   1,
                                   1)
+        self.size_imaenes_view = {"foto":[0,0], 
+                                  "foto_calibrada":[0,0],
+                                  "foto_3d_puntos_local":[0,0],
+                                  "foto_3d_puntos_global":[0,0]}
 
-    def Show_frames(self, frame, index_layout, scalar = True, bit_image=False):
+    def Show_frames(self, frame, index_layout, bit_image=False):
         try:
             bytesPerLine = frame.shape[1] * frame.shape[2]
+            ima = QtGui.QImage(frame,
+                               frame.shape[1],
+                               frame.shape[0],
+                               bytesPerLine,
+                               QtGui.QImage.Format_RGB888)
+            imagen = QtGui.QPixmap.fromImage(ima)
+            imagen = imagen.scaled(469, 469, Qt.KeepAspectRatio)
+            self.label_image[index_layout].setPixmap(imagen)
         except AttributeError as error_list:
             print(error_list)
-        else:
-            if not(bit_image):
-                ima = QtGui.QImage(frame,
-                                   frame.shape[1],
-                                   frame.shape[0],
-                                   bytesPerLine,
-                                   QtGui.QImage.Format_RGB888)
-            else:
-                ima = QtGui.QImage(frame,
-                                   frame.shape[1],
-                                   frame.shape[0],
-                                   bytesPerLine,
-                                   QtGui.QImage.Format_RGB32)
-            imagen = QtGui.QPixmap.fromImage(ima)
-            if scalar:
-                imagen = imagen.scaled(469, 469, Qt.KeepAspectRatio)
-
-            self.label_image[index_layout].setPixmap(imagen)
 
     def search_cordenates_map(self, cordenada):
         self.web_view.load(QUrl(cordenada))

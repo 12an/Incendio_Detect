@@ -2,6 +2,8 @@
 import cv2
 import numpy as np
 from sklearn.cluster import DBSCAN, OPTICS
+from sklearn.linear_model import LinearRegression
+from numpy 
 
 class FiltroFotos:
     def __init__(self, foto):
@@ -36,8 +38,21 @@ class TemperaturaMax:
 
 class RGBToTemperatureScale:
     def __init__(self):
-        self.
-        
+        self.puntos_temp_RGB = {"30":[0,0,0],
+                                "140":[0,0,0],
+                                "100":[0,0,0]}
+        Y_matrix = list()
+        X_matrix = list()
+        for key, values in self.puntos_temp_RGB.items():
+            Y_matrix.append(int(key)) 
+            X_matrix.append(values)
+        Y_matrix = np.array(Y_matrix)
+        X_matrix = np.array(X_matrix)
+        self.reg = LinearRegression().fit(X_matrix, Y_matrix)
+
+    def fit_RGB_temp(self, RGB_list):
+        return self.reg.predict(np.array([RGB_list]))
+
 class CalibrateFoto():
     def __init__(self, foto,
                  mtx,
