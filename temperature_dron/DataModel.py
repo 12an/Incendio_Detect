@@ -3,7 +3,7 @@ import os
 import glob
 from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
-
+import sqlite3
 
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
@@ -42,7 +42,7 @@ class Path():
                              "main_dir" : "temperature_dron"}
     """
     def go_to(self, key):
-        self.current_dir = self.current_dir.replace(self.name_actual_carpet + "\\",
+        self.current_dir = self.current_dir.replace(self.name_actual_carpet,
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
         return self.current_dir + "\\"
@@ -102,7 +102,7 @@ class Data_SQL(Path):
 
     def get_max_id(self):
         self.data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
-        return max_id self.data_row.fetchone()[0]
+        return self.data_row.fetchone()[0]
          
     def guardar_nuevo_incendio_datos(self,
                                      fecha,
@@ -113,7 +113,7 @@ class Data_SQL(Path):
                                      latitude,
                                      longitud,
                                      foto_normal,
-                                     **{}):
+                                     **args):
         informacion_row = (fecha, hora, categoria, area, estimacion)
         self.cursor.execute("INSERT INTO INFORMACION(FECHA, HORA, CATEGORIA, AREA, ESTIMACION) VALUES(?,?,?,?,?)", informacion_row)
         self.conection.commit()
@@ -126,9 +126,9 @@ class Data_SQL(Path):
                              longitud.get("grados"),
                              longitud.get("minutos"),
                              longitud.get("segundos"))
-        self.cursor.execute("INSERT INTO COORDENADA_LATITUDE(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_latitudetable)
+        self.cursor.execute("INSERT INTO COORDENADA_LATITUDE(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_latitude_row)
         self.conection.commit()
-        self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitudtable)
+        self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitud_row)
         self.conection.commit()
         #GUARDANDO FOTO
         imwrite(self.go_to("foto_dir") + str(max_id) + ".png", foto_normal)
@@ -140,68 +140,71 @@ class Data_SQL(Path):
             self.conection.commit()
         return inner
 
-    def leer():
+    def leer(func):
         def inner(self, *arg, **args):
-            query = func(self, *arg, **args)
+            query, expected_variable = func(self, *arg, **args)
             data_cursor = self.cursor.execute(query, {"id":self.ID_data_show})
-            return data_cursor.fetchone()
+            if expected_variable==1:
+                return data_cursor.fetchone()[0]
+            else:
+                return data_cursor.fetchone()
         return inner
 
-        @update
+    @update
     def update_hora(self, value):
         return 'UPDATE  INFORMACION SET HORA=:hora WHERE ID == :id', value
 
-        @update
+    @update
     def update_fecha(self, value):
         return 'UPDATE INFORMACION SET FECHA=:fecha WHERE ID == :id', value
 
-        @update
+    @update
     def update_latitude(self, value):
         return 'UPDATE COORDENADA_LATITUDE SET GRADOS=:grados, MINUTOS=:minutos, SEGUNDOS=:segundos WHERE ID == :id', value
 
-        @update
+    @update
     def update_longitude(self, value):
         return 'UPDATE COORDENADAS_LONGITUD SET GRADOS=:grados, MINUTOS=:minutos, SEGUNDOS=:segundos WHERE ID == :id', value
 
-        @update
+    @update
     def update_categoria(self, value):
         return 'UPDATE INFORMACION SET CATEGORIA=:cateoria WHERE ID == :id', value
 
-        @update
+    @update
     def update_area(self, value):
         return 'UPDATE INFORMACION SET AREA=:area WHERE ID == :id', value
 
-        @update
+    @update
     def update_estimacion(self, value):
         return 'UPDATE INFORMACION SET ESTIMACION=:text WHERE ID == :id', value
 
-        @leer
+    @leer
     def hora(self):
-        return 'SELECT HORA FROM INFORMACION WHERE ID == :id'
+        return 'SELECT HORA FROM INFORMACION WHERE ID == :id', 1
 
-        @leer
+    @leer
     def fecha(self):
-        return 'SELECT FECHA FROM INFORMACION WHERE ID == :id'
+        return 'SELECT FECHA FROM INFORMACION WHERE ID == :id', 1
 
-        @leer
+    @leer
     def latitude(self):
-        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id'
+        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id', 3
 
-        @leer
+    @leer
     def longitude(self):
-        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id'
+        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id', 3
 
-        @leer
+    @leer
     def categoria(self):
-        return 'SELECT CATEGORIA FROM INFORMACION WHERE ID == :id'
+        return 'SELECT CATEGORIA FROM INFORMACION WHERE ID == :id', 1
 
-        @leer
+    @leer
     def area(self):
-        return 'SELECT AREA FROM INFORMACION WHERE ID == :id'
+        return 'SELECT AREA FROM INFORMACION WHERE ID == :id', 1
 
-        @leer
+    @leer
     def estimacion(self):
-        return 'SELECT ESTIMACION FROM INFORMACION WHERE ID == :id'
+        return 'SELECT ESTIMACION FROM INFORMACION WHERE ID == :id', 1
 
 
 class FotoChesspatternData():
@@ -220,12 +223,10 @@ class CameraIntrics():
         self.tvecs = None
 
 
-class DatosControl(Path,
-                   DumpPumpVariable,
+class DatosControl(DumpPumpVariable,
                    CameraIntrics,
                    Data_SQL):
     def __init__(self):
-        Path.__init__(self)
         CameraIntrics.__init__(self)
         Data_SQL.__init__(self)
         print("inicializando DatosControl ")
@@ -306,4 +307,4 @@ class DatosControl(Path,
         return self.mision_status
 
     def foto_spam(self):
-        return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.png"), COLOR_RGB2BGR)
+        return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.jpg"), COLOR_RGB2BGR)

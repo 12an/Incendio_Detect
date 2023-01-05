@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from sklearn.cluster import DBSCAN, OPTICS
 from sklearn.linear_model import LinearRegression
-from numpy 
+
 
 class FiltroFotos:
     def __init__(self, foto):
@@ -26,25 +26,44 @@ class TemperaturaMax:
         self.temp_trigger = temp_trigger
 
     def is_max_trigger_foto(self, foto):
-        max = 0
-        for i in range(0, foto.shape[0], 2):
-            for j in range(0, foto.shape[1], 2):
-                if foto[i,j] > max:
-                    max = foto[i,j]
-        if max>=self.temp_trigger:
+        max_ = 0
+        for i in range(0, foto.shape[0]):
+            for j in range(0, foto.shape[1]):
+                print(foto[i,j])
+                if foto[i,j] > max_:
+                    max_ = foto[i,j]
+        if max_>=self.temp_trigger:
             return True
         else:
             return False
 
 class RGBToTemperatureScale:
     def __init__(self):
-        self.puntos_temp_RGB = {"30":[0,0,0],
-                                "140":[0,0,0],
-                                "100":[0,0,0]}
+        self.puntos_temp_RGB = {"60.0":[251,249,249],
+                                "60.00":[252,250,250],
+                                "60":[252,249,249],
+                                "15.30":[1,1,1],
+                                "15.300":[6,2,2],
+                                "15.3":[9,0,0],
+                                
+                                "50.0":[252,251,251],
+                                "50.01":[250,250,250],
+                                "50":[253,248,248],
+                                "14.8":[2,1,1],
+                                "14.800":[2,0,0],
+                                "14.80":[1,2,2],
+                                
+                                "57.4":[253,252,252],
+                                "57.40":[249,250,250],
+                                "57.400":[250,249,249],
+                                "9.300":[0,1,1],
+                                "9.30":[2,1,1],
+                                "9.3":[9,0,0]                               
+                                }
         Y_matrix = list()
         X_matrix = list()
         for key, values in self.puntos_temp_RGB.items():
-            Y_matrix.append(int(key)) 
+            Y_matrix.append(float(key))
             X_matrix.append(values)
         Y_matrix = np.array(Y_matrix)
         X_matrix = np.array(X_matrix)

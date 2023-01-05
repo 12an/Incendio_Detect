@@ -6,8 +6,10 @@ from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
-from TransformFotos import RGBToTemperatureScale
+from TransformFotos import RGBToTemperatureScale, TemperaturaMax
 from datetime import datetime
+import numpy as np
+
 
 class ControlModel(ViewControl, 
                    DatosControl, 
@@ -35,11 +37,11 @@ class ControlModel(ViewControl,
         # creando timer recurrente leer data del dron
         self.timer = QTimer()
         self.timer.timeout.connect(self.cargar_datos_dron)
-        self.timer.start(3/2)#segundos
+        self.timer.start(2)#segundos
         # creando timer recurrente leer y procesar fotos
         self.timer = QTimer()
         self.timer.timeout.connect(self.nueva_mision_dron_app)
-        self.timer.start(0.25)#segundos
+        self.timer.start(2)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
 
@@ -83,7 +85,6 @@ class ControlModel(ViewControl,
         self.grados_longitud, self.minutos_longitud, self.segundos_longitud = self.longitude()
 
     def update(self):
-        print(self.url_from_data)
         self.search_cordenates_map(self.url_from_data)
         self.update_text(*[],
                          **{"fecha_hora_inicio": self.fecha +", " + self.hora,
@@ -106,10 +107,10 @@ class ControlModel(ViewControl,
             self.load_data_show(index)
             self.build_url()
             self.update()
-            if isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, None):
+            if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)):
                 self.imagenes_procesamiento[index].foto_temperatura_scaled = self.imagenes_procesamiento[index].foto_camara
-                for i in self.imagenes_procesamiento[index].foto_camara.shape[0]:
-                    for j in self.imagenes_procesamiento[index].foto_camara.shape[1]:
+                for i in range(0, self.imagenes_procesamiento[index].foto_camara.shape[0]):
+                    for j in range(0, self.imagenes_procesamiento[index].foto_camara.shape[1]):
                         self.imagenes_procesamiento[index].foto_temperatura_scaled = self.fit_RGB_temp(self.imagenes_procesamiento[index].foto_camara[i,j])
         return innner
             
@@ -142,8 +143,9 @@ class ControlModel(ViewControl,
     def nueva_mision_dron_app(self):
         if(self.status_mision()):
             foto = self.foto_spam()
-            foto_temp = self.from_RGB_to_temp(foto)
-            if self.is_max_trigger_foto(foto_temp):
+            foto_temperatura = self.from_RGB_to_temp(foto, 2)
+            if self.is_max_trigger_foto(foto_temperatura):
+                print("se detecto un incendio")
                 current_datetime = datetime.now()
                 hora = current_datetime.strftime("%H:%M")
                 fecha = current_datetime.strftime("%m-%d-%Y")
@@ -160,11 +162,12 @@ class ControlModel(ViewControl,
                 #update fotos list
                 self.open_foto_analisis()
 
-    def from_RGB_to_temp(self, foto_temp):
-        for i in foto_temp.shape[0]:
-            for j in foto_temp.shape[1]:
-                foto_temp[i,j] = self.fit_RGB_temp(foto_temp[i,j])
-        return foto_temp
+    def from_RGB_to_temp(self, foto_, step_sampling):
+        foto_temperatura = np.zeros((foto_.shape[0]//step_sampling, foto_.shape[1]//step_sampling, 1), dtype=float)
+        for i in range(0,foto_.shape[0], step_sampling):
+            for j in range(0, foto_.shape[1], step_sampling):
+                foto_temperatura[i//step_sampling , j//step_sampling ] = self.fit_RGB_temp(foto_[i,j])
+        return foto_temperatura
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
