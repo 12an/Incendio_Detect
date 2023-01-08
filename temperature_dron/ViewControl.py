@@ -9,12 +9,6 @@ from PySide6.QtWebEngineCore import *
 from widget import Widget
 
 
-class ImagenLabel:
-    def __init__(self, name):
-        self.name = name
-        self.qlabel = QLabel()
-
-
 class ViewControl(Widget):
     def __init__(self):
         Widget.__init__(self)
@@ -30,31 +24,55 @@ class ViewControl(Widget):
         self.ui.AnteriorCordenadaBotton_detalles.clicked.connect(self.anterior)
         self.ui.CancelarCambios.clicked.connect(self.CancelarCambios_observaciones_evento)
         self.ui.GuardarCambios.clicked.connect(self.GuardarCambios_observaciones_evento)
+        self.ui.SiguienteCalibracion.clicked.connect(self.Siguiente_Calibracion_evento)
+        self.ui.CalcularCalibracion.clicked.connect(self.Calcular_Calibracion_evento)
+        self.ui.tabWidget.currentChanged.connect(self.onChange)
+        self.ui.tabWidget.blockSignals(False) #now listen the currentChanged signal
         # imagen 3d
         self.plot_layout = list()
         self.plot_layout.append(self.ui.mapa_3d)
         self.plot_layout.append(self.ui.mapa_2d)
         # imagen tab 3 detalles
-        self.imagenes_detalles = {"0":ImagenLabel("Foto_Camara"),
-                                  "1":ImagenLabel("ImagenProcesada")}
-        self.ui.Foto_Camara.addWidget(self.imagenes_detalles.get("0").qlabel,
-                                  1,
-                                  1)
-        self.ui.ImagenProcesada.addWidget(self.imagenes_detalles.get("1").qlabel,
-                                  1,
-                                  1)
+        self.fotos = [QLabel(), QLabel(), QLabel(), QLabel()]
+        self.ui.Foto_Camara.addWidget(self.fotos[0],
+                                      1,
+                                      1)
+        self.ui.ImagenProcesada.addWidget(self.fotos[1],
+                                          1,
+                                          1)
+        self.ui.Foto_calibracion_antes.addWidget(self.fotos[2],
+                                          1,
+                                          1)
+        self.ui.Foto_calibracion_despues.addWidget(self.fotos[3],
+                                          1,
+                                          1)
         #mapa
         self.web_view = QWebEngineView()
         self.web_view.settings()
         self.ui.web_mapa.addWidget(self.web_view,
                                   1,
                                   1)
-        self.size_imaenes_view = {"foto":[0,0], 
-                                  "foto_calibrada":[0,0],
-                                  "foto_3d_puntos_local":[0,0],
-                                  "foto_3d_puntos_global":[0,0]}
+        self.size_imaenes_view = {"Foto_Camara":(self.fotos[0], [381, 248]), 
+                                  "ImagenProcesada":(self.fotos[1], [381, 248]),
+                                  "Foto_calibracion_antes":(self.fotos[2], [441, 501]),
+                                  "Foto_calibracion_despues":(self.fotos[3], [441, 501])}
+        
 
-    def Show_frames(self, frame, index_layout, bit_image=False):
+    def Show_frames(self, frame, foto_name):
+        """
+        Parameters
+        ----------
+        frame : foto, nparray
+        foto_name : str
+            nombre de foto.
+
+        Returns
+        -------
+        None.
+
+        """
+        layout, foto_size = self.size_imaenes_view.get(foto_name)
+        foto_ancho, foto_largo = foto_size
         try:
             bytesPerLine = frame.shape[1] * frame.shape[2]
             ima = QtGui.QImage(frame,
@@ -63,8 +81,8 @@ class ViewControl(Widget):
                                bytesPerLine,
                                QtGui.QImage.Format_RGB888)
             imagen = QtGui.QPixmap.fromImage(ima)
-            imagen = imagen.scaled(469, 469, Qt.KeepAspectRatio)
-            self.label_image[index_layout].setPixmap(imagen)
+            imagen = imagen.scaled(foto_ancho, foto_largo, Qt.KeepAspectRatio)
+            layout.setPixmap(imagen)
         except AttributeError as error_list:
             print(error_list)
 
@@ -148,11 +166,17 @@ class ViewControl(Widget):
     def CancelarCambios_observaciones_evento(self):
         pass
 
+    def Siguiente_Calibracion_evento(self):
+        pass
+
+    def Calcular_Calibracion_evento(self):
+        pass
+
+    def onChange(self,index): #changed!
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = Widget(8)
     widget.show()
     sys.exit(app.exec())
-
-

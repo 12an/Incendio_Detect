@@ -6,14 +6,85 @@ from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
-from TransformFotos import RGBToTemperatureScale, TemperaturaMax
+from TransformFotos import RGBToTemperatureScale, TemperaturaMax, FiltroFotos
 from datetime import datetime
 import numpy as np
+from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
+import traceback
+from camera import CameraIntrisicsValue
+import cv2
+
+class WorkerSignals(QObject):
+    '''
+    Defines the signals available from a running worker thread.
+
+    Supported signals are:
+
+    finished
+        bool data
+
+    error
+        tuple (exctype, value, traceback.format_exc() )
+
+    result
+        object data returned from processing, anything
+
+    '''
+    finished = Signal()
+    error = Signal(tuple)
+    result = Signal(object)
+
+class threadRGbtemperatura(QRunnable):
+
+    def __init__(self, foto_, step_sampling, fiting_model):
+        QRunnable.__init__(self)
+        self.signals = WorkerSignals()
+        self.foto_ = foto_
+        self.step_sampling = step_sampling
+        self.fiting_model = fiting_model
+
+    @Slot()
+    def run(self):
+        foto_temperatura = np.zeros((self.foto_.shape[0]//self.step_sampling,
+                                     self.foto_.shape[1]//self.step_sampling, 1), dtype=float)
+        try:
+            for i in range(0,self.foto_.shape[0], self.step_sampling):
+                for j in range(0, self.foto_.shape[1], self.step_sampling):
+                    foto_temperatura[i//self.step_sampling, j//self.step_sampling ] = self.fiting_model.predict(np.array([self.foto_[i,j]]))
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(foto_temperatura)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done        
+
+
+class threadMaxTemperatura(QRunnable, TemperaturaMax):
+
+    def __init__(self, foto_temperatura, max_expected_temp):
+        QRunnable.__init__(self)
+        TemperaturaMax.__init__(self, max_expected_temp)
+        self.signals = WorkerSignals()
+        self.foto_temperatura = foto_temperatura
+
+    @Slot()    
+    def run(self):
+        try:
+           triger = self.is_max_trigger_foto(self.foto_temperatura)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(triger)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done
 
 
 class ControlModel(ViewControl, 
-                   DatosControl, 
-                   TemperaturaMax,
+                   DatosControl,
                    RGBToTemperatureScale):
 
     def __init__(self, *arg, **args):
@@ -23,12 +94,22 @@ class ControlModel(ViewControl,
         ViewControl.__init__(self)
         #datos
         DatosControl.__init__(self)
-        TemperaturaMax.__init__(self, 120)
         RGBToTemperatureScale.__init__(self)
+        
+        #variables y constantes
+        self.resolucion_camera = [1920, 1080]
+        self.CHECKERBOARD_SIZE = [3, 3]
+        self.max_expected_temp = 55
+        self.index = 0
+        self.anterior_index = 0
+        self.index_fotos_calibracion = 0
+        self.block_thread_finished = False
+        self.threadpool = QThreadPool()
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
         self.open_foto_analisis(False)
+        self.open_foto_chesspattern(False)
         #control dron
         self.start_mision = BoolData(False, "start_mision")
         self.rtl = BoolData(False, "rtl")
@@ -44,6 +125,7 @@ class ControlModel(ViewControl,
         self.timer.start(2)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
+
 
     def GuardarCambios_observaciones_evento(self):
         estimacion_to_save  = self.get_text_estimacion()
@@ -72,7 +154,7 @@ class ControlModel(ViewControl,
 
     def GenerarReporteBotton_detalles_evento(self):
         pass
-
+        
     def load_data_show(self, index):
         self.ID_data_show  = self.imagenes_procesamiento[index].ID_data
         self.ID_actual_sql_management = self.ID_data_show
@@ -94,6 +176,11 @@ class ControlModel(ViewControl,
                          "area":self.area
                          })
         self.CancelarCambios_observaciones_evento()
+        self.Show_frames(self.imagenes_procesamiento[self.index].foto_camara,
+                         "Foto_Camara")
+        self.Show_frames(self.imagenes_procesamiento[self.index].foto_fitro,
+                         "ImagenProcesada")
+        
         
     def build_url(self):
         semi_url_domain = "https://www.google.com/maps/place/"
@@ -104,24 +191,28 @@ class ControlModel(ViewControl,
     def chage_index(func):
         def innner(self, *arg,**args):
             index = func(self, *arg,**args)
-            self.load_data_show(index)
-            self.build_url()
-            self.update()
-            if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)):
-                self.imagenes_procesamiento[index].foto_temperatura_scaled = self.imagenes_procesamiento[index].foto_camara
-                for i in range(0, self.imagenes_procesamiento[index].foto_camara.shape[0]):
-                    for j in range(0, self.imagenes_procesamiento[index].foto_camara.shape[1]):
-                        self.imagenes_procesamiento[index].foto_temperatura_scaled = self.fit_RGB_temp(self.imagenes_procesamiento[index].foto_camara[i,j])
+            if not(self.anterior_index == index and index != 0):
+                if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
+                    self.block_index_updating = True
+                    self.from_RGB_to_temp(self.imagenes_procesamiento[index].foto_camara, 1, True)
+                if not(isinstance(self.imagenes_procesamiento[index].foto_fitro, np.ndarray)):
+                    _filtro = FiltroFotos(self.imagenes_procesamiento[index].foto_camara)
+                    self.imagenes_procesamiento[index].objetos_temp["FiltroFotos"] = _filtro
+                    self.imagenes_procesamiento[index].foto_fitro = _filtro.foto_bilate
+                self.load_data_show(index)
+                self.build_url()
+                self.update()
+                self.anterior_index = index
         return innner
             
     @chage_index
     def siguiente(self):
-        if self.index < (self.total_incendio - 1):
+        if self.index < (self.total_incendio - 1) and not(self.block_index_updating):
             self.index += 1
         return self.index
     @chage_index
     def anterior(self):
-        if self.index > 0:
+        if self.index > 0 and not(self.block_index_updating):
             self.index -= 1
         return self.index
 
@@ -141,34 +232,99 @@ class ControlModel(ViewControl,
                                         "porc_bat":self.bateria_dron_porc_value})
 
     def nueva_mision_dron_app(self):
-        if(self.status_mision()):
-            foto = self.foto_spam()
-            foto_temperatura = self.from_RGB_to_temp(foto, 2)
-            if self.is_max_trigger_foto(foto_temperatura):
-                print("se detecto un incendio")
-                current_datetime = datetime.now()
-                hora = current_datetime.strftime("%H:%M")
-                fecha = current_datetime.strftime("%m-%d-%Y")
-                latitud = self.coordenadas_actual_dron.get("latitude")
-                longitud = self.coordenadas_actual_dron.get("longitud")
-                self.guardar_nuevo_incendio_datos(**{"fecha":fecha,
-                                                     "hora":hora,
-                                                     "categoria":0,
-                                                     "area":0,
-                                                     "estimacion":"n/a",
-                                                     "latitude":{"grados":latitud[0], "minutos":latitud[1], "seundos":latitud[2]},
-                                                     "longitud":{"grados":longitud[0], "minutos":longitud[1], "seundos":longitud[2]},
-                                                     "foto_normal":foto})
-                #update fotos list
-                self.open_foto_analisis()
+        if(self.status_mision() and not(self.block_thread_finished)):
+            self.foto_temp_spam = self.foto_spam()
+            self.from_RGB_to_temp(self.foto_temp_spam, 2)
+            self.block_thread_finished = True
 
-    def from_RGB_to_temp(self, foto_, step_sampling):
-        foto_temperatura = np.zeros((foto_.shape[0]//step_sampling, foto_.shape[1]//step_sampling, 1), dtype=float)
-        for i in range(0,foto_.shape[0], step_sampling):
-            for j in range(0, foto_.shape[1], step_sampling):
-                foto_temperatura[i//step_sampling , j//step_sampling ] = self.fit_RGB_temp(foto_[i,j])
-        return foto_temperatura
+    def chage_index_chesspatern(func):
+        def innner(self, *arg,**args):
+            index_fotos_calibracion = func(self, *arg,**args)
+            foto1 = cv2.bilateralFilter(self.imagenes_chesspattern[index_fotos_calibracion].foto,10,80,80)
+            foto1 = cv2.cvtColor(foto1, cv2.COLOR_BGR2RGB)
+            foto = cv2.cvtColor(foto1, cv2.COLOR_BGR2GRAY)
+            for i in range(0, foto.shape[0]):
+                for j in range(0, foto.shape[1]):
+                    if foto[i,j] >110:
+                        foto[i,j] = 0
+                    else:
+                        foto[i,j] = 255
+            draw_foto = self.camera_instrisics_.extracting_corners(foto1)
+            index_fotos_calibracion += 1
+            cv2.imshow("hola", draw_foto)
+            self.Show_frames(foto1,
+                             "Foto_calibracion_antes")
+            self.Show_frames(draw_foto,
+                            "Foto_calibracion_despues")            
+        return innner
+    @chage_index_chesspatern
+    def Siguiente_Calibracion_evento(self):
+        if(self.index_fotos_calibracion<self.total_fotos_chesspattern ):
+            self.index_fotos_calibracion += 1
+        return self.index_fotos_calibracion
 
+    def Calcular_Calibracion_evento(self):
+        if(self.index_tag5>0):
+            self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = self.camera_instrisics_.get_intrisic_parameters()
+            self.save_instricic_camera()
+
+    @chage_index_chesspatern
+    def onChange(self,index): #changed!
+        #si estamos en la pagina de calibracion
+        if index==4:
+            self.index_fotos_calibracion = 0
+            self.camera_instrisics_ = CameraIntrisicsValue(self.CHECKERBOARD_SIZE)
+        return self.index_fotos_calibracion 
+            
+        
+    """
+    Hilos para procesamiento, resultados
+    """
+    def signal_error(self, error):
+        self.block_thread_finished = False
+
+    def is_max_trigger_foto_complete(self, triger):
+        if triger:
+            print("se detecto un incendio")
+            current_datetime = datetime.now()
+            hora = current_datetime.strftime("%H:%M")
+            fecha = current_datetime.strftime("%m-%d-%Y")
+            latitud = self.coordenadas_actual_dron.get("latitude")
+            longitud = self.coordenadas_actual_dron.get("longitud")
+            self.guardar_nuevo_incendio_datos(**{"fecha":fecha,
+                                                 "hora":hora,
+                                                 "categoria":0,
+                                                 "area":0,
+                                                 "estimacion":"n/a",
+                                                 "latitude":{"grados":latitud[0], "minutos":latitud[1], "seundos":latitud[2]},
+                                                 "longitud":{"grados":longitud[0], "minutos":longitud[1], "seundos":longitud[2]},
+                                                 "foto_normal":self.foto_temp_spam})
+            #update fotos list
+            self.open_foto_analisis()
+        self.block_thread_finished = False
+    
+    def from_RGB_to_temp_complete(self, foto_temperatura):
+        self.is_max_trigger_foto(foto_temperatura)
+
+    def from_RGB_to_temp_save(self, foto_temperatura):
+        self.imagenes_procesamiento[self.index].foto_temperatura_scaled = foto_temperatura
+    
+    def from_RGB_to_temp(self, foto_, step_sampling, foto_temp_save = False):
+        thread = threadRGbtemperatura(foto_, step_sampling, self.regresion_model)
+        if not(foto_temp_save):
+            thread.signals.result.connect(self.from_RGB_to_temp_complete)
+        else:
+            thread.signals.result.connect(self.from_RGB_to_temp_save)
+        thread.signals.error.connect(self.signal_error)
+        self.threadpool.start(thread)
+    
+    def is_max_trigger_foto(self, foto_temperatura):
+        thread = threadMaxTemperatura(foto_temperatura, self.max_expected_temp)
+        thread.signals.result.connect(self.is_max_trigger_foto_complete)
+        thread.signals.error.connect(self.signal_error)
+        # Execute
+        self.threadpool.start(thread)
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ejecucion = ControlModel()

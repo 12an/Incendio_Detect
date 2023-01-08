@@ -90,6 +90,7 @@ class IncendioData():
         self.foto_undistorted = None
         self.matrix_foto = None
         self.foto_temperatura_scaled = None
+        self.objetos_temp = {}
 
 
 class Data_SQL(Path):
@@ -242,7 +243,7 @@ class DatosControl(DumpPumpVariable,
         def inner(self, *arg,**args):
             # charging images
             path, tipo_imagen = func(self, *arg,**args)
-            for path_name_foto in glob.iglob(path + "\*.jpg"):
+            for path_name_foto in glob.iglob(path + "\*.jpeg"):
                 #al path le quitamos el nombre del archiv0
                 name_foto = path_name_foto[len(path) : ]               
                 ID_data = name_foto[:-4]
@@ -270,7 +271,6 @@ class DatosControl(DumpPumpVariable,
     @open_
     def open_foto_chesspattern(self, path = False):
         if isinstance(path, bool):
-            path = self.path_directory
             return self.go_to("chess_dir"), 2
         else:
             return path, 2
@@ -307,4 +307,4 @@ class DatosControl(DumpPumpVariable,
         return self.mision_status
 
     def foto_spam(self):
-        return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.jpg"), COLOR_RGB2BGR)
+        return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.jpeg"), COLOR_RGB2BGR)

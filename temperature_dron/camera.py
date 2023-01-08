@@ -3,7 +3,7 @@
 import cv2
 import numpy as np
 
-class CameraIntrisicsValue(Camera):
+class CameraIntrisicsValue():
     def __init__(self,
                  CHECKERBOARD,
                  *arg, **args):
@@ -26,16 +26,14 @@ class CameraIntrisicsValue(Camera):
 
 
     def extracting_corners(self, foto):
-        gray = cv2.cvtColor(foto, cv2.COLOR_BGR2GRAY)
-        self.shape = foto.shape[:2]
+        gray = foto#cv2.cvtColor(foto, cv2.COLOR_BGR2GRAY)
+        #self.shape = foto.shape[:2]
         # Find the chess board corners
         # If desired number of corners are found in the image then ret = true
-        ret, corners = cv2.findChessboardCornersSB(foto,
+        ret, corners = cv2.findCirclesGrid(foto,
                                                  self.CHECKERBOARD,
                                                  flags = (cv2.CALIB_CB_NORMALIZE_IMAGE +
-                                                          cv2.CALIB_CB_EXHAUSTIVE + 
-                                                          cv2.CALIB_CB_ACCURACY + 
-                                                          cv2.CALIB_CB_LARGER ))
+                                                          cv2.CALIB_CB_CLUSTERING ))
         """
         If desired number of corner are detected,
         we refine the pixel coordinates and display 
@@ -67,6 +65,6 @@ class CameraIntrisicsValue(Camera):
         """
         return cv2.calibrateCamera(self.objpoints,
                                               self.imgpoints,
-                                              self.shape,
+                                              0,#self.shape,
                                               None,
                                               None)

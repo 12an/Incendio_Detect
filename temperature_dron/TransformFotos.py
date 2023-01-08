@@ -29,7 +29,6 @@ class TemperaturaMax:
         max_ = 0
         for i in range(0, foto.shape[0]):
             for j in range(0, foto.shape[1]):
-                print(foto[i,j])
                 if foto[i,j] > max_:
                     max_ = foto[i,j]
         if max_>=self.temp_trigger:
@@ -67,10 +66,8 @@ class RGBToTemperatureScale:
             X_matrix.append(values)
         Y_matrix = np.array(Y_matrix)
         X_matrix = np.array(X_matrix)
-        self.reg = LinearRegression().fit(X_matrix, Y_matrix)
+        self.regresion_model = LinearRegression().fit(X_matrix, Y_matrix)
 
-    def fit_RGB_temp(self, RGB_list):
-        return self.reg.predict(np.array([RGB_list]))
 
 class CalibrateFoto():
     def __init__(self, foto,

@@ -16,8 +16,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDateEdit, QFrame, QGridLayout,
-    QLabel, QPlainTextEdit, QPushButton, QSizePolicy,
-    QTabWidget, QTextBrowser, QTimeEdit, QWidget)
+    QLabel, QLayout, QPlainTextEdit, QPushButton,
+    QSizePolicy, QTabWidget, QTextBrowser, QTimeEdit,
+    QWidget)
 
 class Ui_MainWidget(object):
     def setupUi(self, MainWidget):
@@ -143,7 +144,7 @@ class Ui_MainWidget(object):
         self.fechaEdit.setObjectName(u"fechaEdit")
         self.fechaEdit.setGeometry(QRect(510, 150, 101, 31))
         self.fechaEdit.setAlignment(Qt.AlignCenter)
-        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2026, 1, 2), QTime(23, 59, 59)))
+        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2026, 1, 4), QTime(23, 59, 59)))
         self.fechaEdit.setMinimumDateTime(QDateTime(QDate(2000, 9, 14), QTime(0, 0, 0)))
         self.GuardarCambios = QPushButton(self.Editar)
         self.GuardarCambios.setObjectName(u"GuardarCambios")
@@ -193,6 +194,7 @@ class Ui_MainWidget(object):
         self.gridLayoutWidget_3.setGeometry(QRect(10, 10, 381, 241))
         self.Foto_Camara = QGridLayout(self.gridLayoutWidget_3)
         self.Foto_Camara.setObjectName(u"Foto_Camara")
+        self.Foto_Camara.setSizeConstraint(QLayout.SetFixedSize)
         self.Foto_Camara.setContentsMargins(0, 0, 0, 0)
         self.label = QLabel(self.tab_3)
         self.label.setObjectName(u"label")
@@ -240,6 +242,7 @@ class Ui_MainWidget(object):
         self.gridLayoutWidget_6.setGeometry(QRect(10, 270, 381, 241))
         self.ImagenProcesada = QGridLayout(self.gridLayoutWidget_6)
         self.ImagenProcesada.setObjectName(u"ImagenProcesada")
+        self.ImagenProcesada.setSizeConstraint(QLayout.SetFixedSize)
         self.ImagenProcesada.setContentsMargins(0, 0, 0, 0)
         self.LINEA_DIVISORA_2 = QFrame(self.tab_3)
         self.LINEA_DIVISORA_2.setObjectName(u"LINEA_DIVISORA_2")
@@ -255,6 +258,31 @@ class Ui_MainWidget(object):
         self.textBrowser.setObjectName(u"textBrowser")
         self.textBrowser.setGeometry(QRect(650, 310, 201, 101))
         self.tabWidget.addTab(self.tab_3, "")
+        self.tab_2 = QWidget()
+        self.tab_2.setObjectName(u"tab_2")
+        self.gridLayoutWidget_8 = QWidget(self.tab_2)
+        self.gridLayoutWidget_8.setObjectName(u"gridLayoutWidget_8")
+        self.gridLayoutWidget_8.setGeometry(QRect(0, 10, 441, 501))
+        self.Foto_calibracion_antes = QGridLayout(self.gridLayoutWidget_8)
+        self.Foto_calibracion_antes.setObjectName(u"Foto_calibracion_antes")
+        self.Foto_calibracion_antes.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.Foto_calibracion_antes.setContentsMargins(0, 0, 0, 0)
+        self.SiguienteCalibracion = QPushButton(self.tab_2)
+        self.SiguienteCalibracion.setObjectName(u"SiguienteCalibracion")
+        self.SiguienteCalibracion.setGeometry(QRect(0, 520, 451, 41))
+        self.SiguienteCalibracion.setFont(font1)
+        self.gridLayoutWidget_9 = QWidget(self.tab_2)
+        self.gridLayoutWidget_9.setObjectName(u"gridLayoutWidget_9")
+        self.gridLayoutWidget_9.setGeometry(QRect(450, 10, 441, 501))
+        self.Foto_calibracion_despues = QGridLayout(self.gridLayoutWidget_9)
+        self.Foto_calibracion_despues.setObjectName(u"Foto_calibracion_despues")
+        self.Foto_calibracion_despues.setContentsMargins(0, 0, 0, 0)
+        self.CalcularCalibracion = QPushButton(self.tab_2)
+        self.CalcularCalibracion.setObjectName(u"CalcularCalibracion")
+        self.CalcularCalibracion.setGeometry(QRect(450, 520, 445, 41))
+        self.CalcularCalibracion.setFont(font1)
+        self.CalcularCalibracion.setIcon(icon1)
+        self.tabWidget.addTab(self.tab_2, "")
 
         self.retranslateUi(MainWidget)
 
@@ -300,5 +328,8 @@ class Ui_MainWidget(object):
         self.label_area.setText(QCoreApplication.translate("MainWidget", u"5 M2", None))
         self.GenerarReporteBotton_detalles.setText(QCoreApplication.translate("MainWidget", u"Generar Reporte Resumen", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QCoreApplication.translate("MainWidget", u"Detalles Fuego", None))
+        self.SiguienteCalibracion.setText(QCoreApplication.translate("MainWidget", u"Siguiente", None))
+        self.CalcularCalibracion.setText(QCoreApplication.translate("MainWidget", u"Calcular", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWidget", u"Camara Calibracion", None))
     # retranslateUi
 
