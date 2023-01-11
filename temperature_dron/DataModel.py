@@ -88,9 +88,9 @@ class IncendioData():
         self.foto_camara = foto_camara
         self.foto_fitro = None
         self.foto_undistorted = None
+        self.foto_undistorted_cut = None
         self.matrix_foto = None
         self.foto_temperatura_scaled = None
-        self.objetos_temp = {}
 
 
 class Data_SQL(Path):
@@ -99,7 +99,7 @@ class Data_SQL(Path):
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
-        self.ID_actual_sql_management = 0
+        self.ID_actual_sql_management = {"id":0}
 
     def get_max_id(self):
         self.data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
@@ -114,9 +114,10 @@ class Data_SQL(Path):
                                      latitude,
                                      longitud,
                                      foto_normal,
+                                     altura,
                                      **args):
-        informacion_row = (fecha, hora, categoria, area, estimacion)
-        self.cursor.execute("INSERT INTO INFORMACION(FECHA, HORA, CATEGORIA, AREA, ESTIMACION) VALUES(?,?,?,?,?)", informacion_row)
+        informacion_row = (fecha, hora, categoria, area, estimacion, altura)
+        self.cursor.execute("INSERT INTO INFORMACION(FECHA, HORA, CATEGORIA, AREA, ESTIMACION, ALTURA) VALUES(?,?,?,?,?, ?)", informacion_row)
         self.conection.commit()
         max_id = self.get_max_id()
         data_latitude_row = (max_id,
@@ -137,14 +138,16 @@ class Data_SQL(Path):
     def update(func):
         def inner(self, *arg, **args):
             query, data = func(self, *arg, **args)
-            self.cursor.execute(query, data)
+            updated_data = self.ID_actual_sql_management.copy()            
+            updated_data.update(data)
+            self.cursor.execute(query, updated_data)
             self.conection.commit()
         return inner
 
     def leer(func):
         def inner(self, *arg, **args):
             query, expected_variable = func(self, *arg, **args)
-            data_cursor = self.cursor.execute(query, {"id":self.ID_data_show})
+            data_cursor = self.cursor.execute(query, self.ID_actual_sql_management)
             if expected_variable==1:
                 return data_cursor.fetchone()[0]
             else:
@@ -180,32 +183,36 @@ class Data_SQL(Path):
         return 'UPDATE INFORMACION SET ESTIMACION=:text WHERE ID == :id', value
 
     @leer
-    def hora(self):
+    def hora_sql(self):
         return 'SELECT HORA FROM INFORMACION WHERE ID == :id', 1
 
     @leer
-    def fecha(self):
+    def fecha_sql(self):
         return 'SELECT FECHA FROM INFORMACION WHERE ID == :id', 1
 
     @leer
-    def latitude(self):
+    def latitude_sql(self):
         return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id', 3
 
     @leer
-    def longitude(self):
+    def longitude_sql(self):
         return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id', 3
 
     @leer
-    def categoria(self):
+    def categoria_sql(self):
         return 'SELECT CATEGORIA FROM INFORMACION WHERE ID == :id', 1
 
     @leer
-    def area(self):
+    def area_sql(self):
         return 'SELECT AREA FROM INFORMACION WHERE ID == :id', 1
 
     @leer
-    def estimacion(self):
+    def estimacion_sql(self):
         return 'SELECT ESTIMACION FROM INFORMACION WHERE ID == :id', 1
+    
+    @leer
+    def altura_sql(self):
+        return 'SELECT ALTURA FROM INFORMACION WHERE ID == :id', 1
 
 
 class FotoChesspatternData():
@@ -247,7 +254,7 @@ class DatosControl(DumpPumpVariable,
                 #al path le quitamos el nombre del archiv0
                 name_foto = path_name_foto[len(path) : ]               
                 ID_data = name_foto[:-4]
-                imagen = cvtColor(imread(path_name_foto), COLOR_RGB2BGR)
+                imagen = imread(path_name_foto)
                 if(tipo_imagen==1):
                     self.total_incendio += 1
                     self.imagenes_procesamiento.append(IncendioData(*[],
@@ -290,6 +297,7 @@ class DatosControl(DumpPumpVariable,
         packet = self.pump(self.go_to("data_dir"), "registed_data_instricic")
         try:
             self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = packet
+            print(self.mtx)
         except ValueError as nothing_in_file:
             print("parece que no se ha guardado")
             print(nothing_in_file)
@@ -301,6 +309,10 @@ class DatosControl(DumpPumpVariable,
     def read_actual_coordenates_dron(self):
         self.coordenadas_actual_dron = self.pump(self.go_to("data_dir"), "coordenadas_dron")
         return self.coordenadas_actual_dron
+    
+    def read_actual_altura_dron(self):
+        self.altura_actual_dron = self.pump(self.go_to("data_dir"), "altura_dron")
+        return self.altura_actual_dron
 
     def status_mision(self):
         self.mision_status = self.pump(self.go_to("data_dir"), "mision_status")

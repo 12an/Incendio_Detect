@@ -144,7 +144,7 @@ class Ui_MainWidget(object):
         self.fechaEdit.setObjectName(u"fechaEdit")
         self.fechaEdit.setGeometry(QRect(510, 150, 101, 31))
         self.fechaEdit.setAlignment(Qt.AlignCenter)
-        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2026, 1, 4), QTime(23, 59, 59)))
+        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2026, 1, 5), QTime(23, 59, 59)))
         self.fechaEdit.setMinimumDateTime(QDateTime(QDate(2000, 9, 14), QTime(0, 0, 0)))
         self.GuardarCambios = QPushButton(self.Editar)
         self.GuardarCambios.setObjectName(u"GuardarCambios")

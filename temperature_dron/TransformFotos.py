@@ -70,40 +70,34 @@ class RGBToTemperatureScale:
 
 
 class CalibrateFoto():
-    def __init__(self, foto,
-                 mtx,
-                 dist,
-                 width,
-                 height,
-                 altura_foto_tomada, 
-                 *arg,
-                 **args):
-        self.mtx = mtx
-        self.dist = dist
-        self.foto_tratada = foto
-        self.width = width
-        self.height = height
-        self.altura_foto_tomada = altura_foto_tomada
-        self.calibrate()
-        self.foto_3d_from_2d = np.zeros((self.height, self.width, 3), dtype=float)
-    def calibrate(self):
-        self.cameramtx, self.roi = cv2.getOptimalNewCameraMatrix(self.mtx,
-                                                          self.dist,
-                                                          (self.width , self.height ),
+    def calibrate(self, foto, mtx, dist):
+        self.cameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx,
+                                                          dist,
+                                                          (foto.shape[1], foto.shape[0] ),
                                                           1,
-                                                          (self.width , self.height ))
-        mapx, mapy = cv2.initUndistortRectifyMap(self.mtx, self.dist, None, self.cameramtx, (self.width , self.height ), 5)
-        dst1 = cv2.remap(self.foto_tratada, mapx, mapy, cv2.INTER_LINEAR)
-        self.foto_calibrada = cv2.cvtColor(dst1, cv2.COLOR_RGB2BGR)
+                                                          (foto.shape[1] , foto.shape[0]))
+        mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, self.cameramtx, (foto.shape[1], foto.shape[0]), 5)
+        foto_calibrada = cv2.remap(foto, mapx, mapy, cv2.INTER_LINEAR)
         # crop the image
-        x, y, w, h = self.roi
-        self.foto_calibrada_recortada = self.foto_calibrada[y:y+h, x:x+w]
+        x, y, w, h = roi
+        foto_calibrada_recortada = foto_calibrada[y:y+h, x:x+w]
+        # dibujando cuadrado en la imagen calibrada del area de interes
+        for j in range(x, x + w):
+            for doble_linea in range(0, 2):
+                foto_calibrada[y + doble_linea, j] = [239,184,16]
+                foto_calibrada[y + h + doble_linea, j] = [239,184,16]
+        for i in range(y, y + h):
+            for doble_linea in range(0, 2):
+                foto_calibrada[i, x + doble_linea] = [239,184,16]
+                foto_calibrada[i, x + w + doble_linea] = [239,184,16]
+        return foto_calibrada, foto_calibrada_recortada 
         
-    def get_foto_3d_from_2d(self):
+    def get_foto_3d_from_2d(self,foto, altura, cameramtx):
         # z es constante a la altura de la imagen
-        for i in range(0, self.width):
-            for j in range(0, self.height):
-                vector_pixel_2d_posicion = np.matrix([[i], [j], [self.altura_foto_tomada]])
+        u_v = 
+        for i in range(0, foto.shape[0]):
+            for j in range(0,foto.shape[1]):
+                vector_pixel_2d_posicion = np.matrix([[i], [j], [altura]])
                 foto_3d_from_2d = np.linalg.solv(self.cameramtx, vector_pixel_2d_posicion)
                 self.foto_3d_from_2d[i][j][0] = foto_3d_from_2d[0]
                 self.foto_3d_from_2d[i][j][1] = foto_3d_from_2d[1]
@@ -116,7 +110,6 @@ class Segmentacion():
                 *arg,
                 **args):
 
-        self.foto_calibrada_recortada_segmentada = foto_calibrada#cv2.cvtColor(foto_calibrada, cv2.COLOR_BGR2HSV)
         #reshaping foto from 3 dimensions to 2 dimensions
         self.foto_reshaped = self.foto_calibrada_recortada_segmentada.reshape((-1,3))
         #converting to float

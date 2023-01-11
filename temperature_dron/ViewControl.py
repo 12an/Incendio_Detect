@@ -7,7 +7,7 @@ from PySide6 import QtGui
 from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWebEngineCore import *
 from widget import Widget
-
+from cv2 import cvtColor, COLOR_RGB2BGR
 
 class ViewControl(Widget):
     def __init__(self):
@@ -33,7 +33,10 @@ class ViewControl(Widget):
         self.plot_layout.append(self.ui.mapa_3d)
         self.plot_layout.append(self.ui.mapa_2d)
         # imagen tab 3 detalles
-        self.fotos = [QLabel(), QLabel(), QLabel(), QLabel()]
+        self.fotos = list()
+        for obj in range(0,4):
+            temp = QLabel()
+            self.fotos.append(temp)
         self.ui.Foto_Camara.addWidget(self.fotos[0],
                                       1,
                                       1)
@@ -71,6 +74,7 @@ class ViewControl(Widget):
         None.
 
         """
+        frame = cvtColor(frame, COLOR_RGB2BGR)
         layout, foto_size = self.size_imaenes_view.get(foto_name)
         foto_ancho, foto_largo = foto_size
         try:

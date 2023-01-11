@@ -6,7 +6,7 @@ from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
-from TransformFotos import RGBToTemperatureScale, TemperaturaMax, FiltroFotos
+from TransformFotos import RGBToTemperatureScale, TemperaturaMax, FiltroFotos, CalibrateFoto
 from datetime import datetime
 import numpy as np
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
@@ -85,7 +85,8 @@ class threadMaxTemperatura(QRunnable, TemperaturaMax):
 
 class ControlModel(ViewControl, 
                    DatosControl,
-                   RGBToTemperatureScale):
+                   RGBToTemperatureScale,
+                   CalibrateFoto):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
@@ -98,13 +99,15 @@ class ControlModel(ViewControl,
         
         #variables y constantes
         self.resolucion_camera = [1920, 1080]
-        self.CHECKERBOARD_SIZE = [3, 3]
+        self.CHECKERBOARD_SIZE = [5, 5]
         self.max_expected_temp = 55
         self.index = 0
-        self.anterior_index = 0
+        self.click_siguiente = 0
         self.index_fotos_calibracion = 0
+        self.click_siguiente_chesspatern = 0
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
+        self.camera_instrisics_ = CameraIntrisicsValue(self.CHECKERBOARD_SIZE)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
         self.cursor = self.conection.cursor()
@@ -156,15 +159,16 @@ class ControlModel(ViewControl,
         pass
         
     def load_data_show(self, index):
-        self.ID_data_show  = self.imagenes_procesamiento[index].ID_data
-        self.ID_actual_sql_management = self.ID_data_show
-        self.fecha = self.fecha()
-        self.hora = self.hora()
-        self.categoria = self.categoria()
-        self.area = self.area()
-        self.estimacion = self.estimacion()
-        self.grados_latitude, self.minutos_latitude, self.segundos_latitude = self.latitude()
-        self.grados_longitud, self.minutos_longitud, self.segundos_longitud = self.longitude()
+        self.ID_actual_sql_management["id"] = self.imagenes_procesamiento[index].ID_data
+        self.fecha = self.fecha_sql()
+        
+        self.hora = self.hora_sql()
+        self.categoria = self.categoria_sql()
+        self.area = self.area_sql()
+        self.estimacion = self.estimacion_sql()
+        self.altura = self.altura_sql()
+        self.grados_latitude, self.minutos_latitude, self.segundos_latitude = self.latitude_sql()
+        self.grados_longitud, self.minutos_longitud, self.segundos_longitud = self.longitude_sql()
 
     def update(self):
         self.search_cordenates_map(self.url_from_data)
@@ -178,7 +182,7 @@ class ControlModel(ViewControl,
         self.CancelarCambios_observaciones_evento()
         self.Show_frames(self.imagenes_procesamiento[self.index].foto_camara,
                          "Foto_Camara")
-        self.Show_frames(self.imagenes_procesamiento[self.index].foto_fitro,
+        self.Show_frames(self.imagenes_procesamiento[self.index].foto_undistorted,
                          "ImagenProcesada")
         
         
@@ -191,14 +195,19 @@ class ControlModel(ViewControl,
     def chage_index(func):
         def innner(self, *arg,**args):
             index = func(self, *arg,**args)
-            if not(self.anterior_index == index and index != 0):
+            if self.index <= (self.total_incendio - 1):
                 if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
                     self.block_index_updating = True
                     self.from_RGB_to_temp(self.imagenes_procesamiento[index].foto_camara, 1, True)
                 if not(isinstance(self.imagenes_procesamiento[index].foto_fitro, np.ndarray)):
                     _filtro = FiltroFotos(self.imagenes_procesamiento[index].foto_camara)
-                    self.imagenes_procesamiento[index].objetos_temp["FiltroFotos"] = _filtro
                     self.imagenes_procesamiento[index].foto_fitro = _filtro.foto_bilate
+                if not(isinstance(self.imagenes_procesamiento[index].foto_undistorted, np.ndarray)):
+                    _undistorted, cut_undistorted = self.calibrate(self.imagenes_procesamiento[index].foto_fitro,
+                                                                   self.mtx,
+                                                                   self.dist)
+                    self.imagenes_procesamiento[index].foto_undistorted_cut = cut_undistorted
+                    self.imagenes_procesamiento[index].foto_undistorted = _undistorted
                 self.load_data_show(index)
                 self.build_url()
                 self.update()
@@ -209,11 +218,14 @@ class ControlModel(ViewControl,
     def siguiente(self):
         if self.index < (self.total_incendio - 1) and not(self.block_index_updating):
             self.index += 1
+            print(self.index)
         return self.index
+
     @chage_index
     def anterior(self):
         if self.index > 0 and not(self.block_index_updating):
             self.index -= 1
+            print(self.index)
         return self.index
 
     @chage_index
@@ -240,31 +252,23 @@ class ControlModel(ViewControl,
     def chage_index_chesspatern(func):
         def innner(self, *arg,**args):
             index_fotos_calibracion = func(self, *arg,**args)
-            foto1 = cv2.bilateralFilter(self.imagenes_chesspattern[index_fotos_calibracion].foto,10,80,80)
-            foto1 = cv2.cvtColor(foto1, cv2.COLOR_BGR2RGB)
-            foto = cv2.cvtColor(foto1, cv2.COLOR_BGR2GRAY)
-            for i in range(0, foto.shape[0]):
-                for j in range(0, foto.shape[1]):
-                    if foto[i,j] >110:
-                        foto[i,j] = 0
-                    else:
-                        foto[i,j] = 255
-            draw_foto = self.camera_instrisics_.extracting_corners(foto1)
-            index_fotos_calibracion += 1
-            cv2.imshow("hola", draw_foto)
-            self.Show_frames(foto1,
-                             "Foto_calibracion_antes")
-            self.Show_frames(draw_foto,
-                            "Foto_calibracion_despues")            
+            if self.click_siguiente_chesspatern <= (self.total_fotos_chesspattern - 1):
+                foto = self.imagenes_chesspattern[index_fotos_calibracion].foto
+                self.Show_frames(foto,
+                                 "Foto_calibracion_antes")
+                self.Show_frames(self.camera_instrisics_.extracting_corners(foto),
+                                 "Foto_calibracion_despues")
+                self.click_siguiente_chesspatern +=1 
         return innner
+
     @chage_index_chesspatern
     def Siguiente_Calibracion_evento(self):
-        if(self.index_fotos_calibracion<self.total_fotos_chesspattern ):
+        if(self.index_fotos_calibracion<= (self.total_fotos_chesspattern -2 ) ):
             self.index_fotos_calibracion += 1
         return self.index_fotos_calibracion
 
     def Calcular_Calibracion_evento(self):
-        if(self.index_tag5>0):
+        if(self.index_fotos_calibracion>0):
             self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = self.camera_instrisics_.get_intrisic_parameters()
             self.save_instricic_camera()
 
@@ -273,6 +277,8 @@ class ControlModel(ViewControl,
         #si estamos en la pagina de calibracion
         if index==4:
             self.index_fotos_calibracion = 0
+            self.click_siguiente_chesspatern = 0
+            self.camera_instrisics_ = 0
             self.camera_instrisics_ = CameraIntrisicsValue(self.CHECKERBOARD_SIZE)
         return self.index_fotos_calibracion 
             
@@ -291,6 +297,7 @@ class ControlModel(ViewControl,
             fecha = current_datetime.strftime("%m-%d-%Y")
             latitud = self.coordenadas_actual_dron.get("latitude")
             longitud = self.coordenadas_actual_dron.get("longitud")
+            altura = self.read_actual_altura_dron()
             self.guardar_nuevo_incendio_datos(**{"fecha":fecha,
                                                  "hora":hora,
                                                  "categoria":0,
@@ -298,7 +305,8 @@ class ControlModel(ViewControl,
                                                  "estimacion":"n/a",
                                                  "latitude":{"grados":latitud[0], "minutos":latitud[1], "seundos":latitud[2]},
                                                  "longitud":{"grados":longitud[0], "minutos":longitud[1], "seundos":longitud[2]},
-                                                 "foto_normal":self.foto_temp_spam})
+                                                 "foto_normal":self.foto_temp_spam,
+                                                 "altura":altura})
             #update fotos list
             self.open_foto_analisis()
         self.block_thread_finished = False
@@ -308,6 +316,7 @@ class ControlModel(ViewControl,
 
     def from_RGB_to_temp_save(self, foto_temperatura):
         self.imagenes_procesamiento[self.index].foto_temperatura_scaled = foto_temperatura
+        self.block_index_updating = False
     
     def from_RGB_to_temp(self, foto_, step_sampling, foto_temp_save = False):
         thread = threadRGbtemperatura(foto_, step_sampling, self.regresion_model)

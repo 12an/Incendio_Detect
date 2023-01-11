@@ -16,31 +16,36 @@ class CameraIntrisicsValue():
         self.objpoints = list()
         # Creating vector to store vectors of 2D points for each checkerboard image
         self.imgpoints = list()
-        # Defining the world coordinates for 3D points
-        self.objp = np.zeros((1,
-                              CHECKERBOARD[0] * CHECKERBOARD[1],
-                              3), np.float32)
-        self.objp[0,:,:2] = np.mgrid[0:CHECKERBOARD[0], 
-                                     0:CHECKERBOARD[1]].T.reshape(-1, 2)
+
         self.intrisics = list()
 
 
     def extracting_corners(self, foto):
-        gray = foto#cv2.cvtColor(foto, cv2.COLOR_BGR2GRAY)
-        #self.shape = foto.shape[:2]
+        gray = cv2.cvtColor(foto, cv2.COLOR_BGR2GRAY)
+        self.shape = foto.shape[:2]
         # Find the chess board corners
         # If desired number of corners are found in the image then ret = true
-        ret, corners = cv2.findCirclesGrid(foto,
-                                                 self.CHECKERBOARD,
-                                                 flags = (cv2.CALIB_CB_NORMALIZE_IMAGE +
-                                                          cv2.CALIB_CB_CLUSTERING ))
+        
+        ret, corners = cv2.findChessboardCornersSB(gray,
+                                                   self.CHECKERBOARD,
+                                                   flags = (
+                                                       cv2.CALIB_CB_NORMALIZE_IMAGE +
+                                                       cv2.CALIB_CB_EXHAUSTIVE  +
+                                                       cv2.CALIB_CB_ACCURACY +
+                                                       cv2.CALIB_CB_LARGER
+                                                          ))
+
         """
         If desired number of corner are detected,
         we refine the pixel coordinates and display 
         them on the images of checker board
         """
         if ret == True:
-            self.objpoints.append(self.objp)
+            # Defining the world coordinates for 3D points
+            objp = np.zeros((1, self.CHECKERBOARD[0] * self.CHECKERBOARD[1], 3), np.float32)
+            objp[0,:,:2] = np.mgrid[0:self.CHECKERBOARD[0], 
+                                         0:self.CHECKERBOARD[1]].T.reshape(-1, 2)
+            self.objpoints.append(objp)
             # refining pixel coordinates for given 2d points.
             corners2 = cv2.cornerSubPix(gray,
                                         corners, 
@@ -65,6 +70,6 @@ class CameraIntrisicsValue():
         """
         return cv2.calibrateCamera(self.objpoints,
                                               self.imgpoints,
-                                              0,#self.shape,
+                                              self.shape,
                                               None,
                                               None)
