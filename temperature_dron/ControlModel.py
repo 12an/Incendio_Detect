@@ -206,6 +206,7 @@ class ControlModel(ViewControl,
                     _undistorted, cut_undistorted = self.calibrate(self.imagenes_procesamiento[index].foto_fitro,
                                                                    self.mtx,
                                                                    self.dist)
+                    self.get_foto_3d_from_2d(self.rvecs, self.tvecs)
                     self.imagenes_procesamiento[index].foto_undistorted_cut = cut_undistorted
                     self.imagenes_procesamiento[index].foto_undistorted = _undistorted
                 self.load_data_show(index)

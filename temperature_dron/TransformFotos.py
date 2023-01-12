@@ -92,16 +92,28 @@ class CalibrateFoto():
                 foto_calibrada[i, x + w + doble_linea] = [239,184,16]
         return foto_calibrada, foto_calibrada_recortada 
         
-    def get_foto_3d_from_2d(self,foto, altura, cameramtx):
+    def get_foto_3d_from_2d(self,foto, cameramtx, R, T):
         # z es constante a la altura de la imagen
-        u_v = 
-        for i in range(0, foto.shape[0]):
+
+        R_matrix,_ = cv2.Rodrigues(R[0])
+        T_vector = T[0]
+        R_T = np.hstack((R_matrix, T_vector))
+        Fx = cameramtx[0,0]
+        Fy = cameramtx[1,1]
+        Cx = cameramtx[0,2]
+        Cy = cameramtx[1,2]
+        A_matrix = np.matrix([[(Fx*R_T[0,0] + Cx*R_T[2,0]), (Fx*R_T[0,1] + Cx*R_T[2,1]), (Fx*R_T[0,2] + Cx*R_T[2,2])],
+                              [(Fy*R_T[10] + Cy*R_T[2,0]), (Fy*R_T[1,1] + Cy*R_T[2,1]), (Fy*R_T[1,2] + Cy*R_T[2,2])],
+                              [(R_T[2,0]), (R_T[2,1]), (R_T[2,2])]])
+        puntos_3d = list()
+        for i in range(0,foto.shape[0]):
             for j in range(0,foto.shape[1]):
-                vector_pixel_2d_posicion = np.matrix([[i], [j], [altura]])
-                foto_3d_from_2d = np.linalg.solv(self.cameramtx, vector_pixel_2d_posicion)
-                self.foto_3d_from_2d[i][j][0] = foto_3d_from_2d[0]
-                self.foto_3d_from_2d[i][j][1] = foto_3d_from_2d[1]
-                self.foto_3d_from_2d[i][j][2] = foto_3d_from_2d[2]
+                B_matrix = np.matrix([[i - (Fx*R_T[0,3] + Cx*R_T[2,3])],
+                                      [j - (Fy*R_T[1,3] + Cy*R_T[2,3])],
+                                      [1 - ( R_T[2,3])]])
+                puntos_3d.append(np.linalg.solve(A_matrix, B_matrix))
+        return puntos_3d
+
 
 class Segmentacion():
     def __init__(self, foto_calibrada,
