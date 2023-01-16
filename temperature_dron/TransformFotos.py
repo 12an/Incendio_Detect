@@ -38,26 +38,8 @@ class TemperaturaMax:
 
 class RGBToTemperatureScale:
     def __init__(self):
-        self.puntos_temp_RGB = {"60.0":[251,249,249],
-                                "60.00":[252,250,250],
-                                "60":[252,249,249],
-                                "15.30":[1,1,1],
-                                "15.300":[6,2,2],
-                                "15.3":[9,0,0],
-                                
-                                "50.0":[252,251,251],
-                                "50.01":[250,250,250],
-                                "50":[253,248,248],
-                                "14.8":[2,1,1],
-                                "14.800":[2,0,0],
-                                "14.80":[1,2,2],
-                                
-                                "57.4":[253,252,252],
-                                "57.40":[249,250,250],
-                                "57.400":[250,249,249],
-                                "9.300":[0,1,1],
-                                "9.30":[2,1,1],
-                                "9.3":[9,0,0]                               
+        self.puntos_temp_RGB = {"60.0":[251,249],
+                                "9.3":[9,0]
                                 }
         Y_matrix = list()
         X_matrix = list()
@@ -70,76 +52,77 @@ class RGBToTemperatureScale:
 
 
 class CalibrateFoto():
-    def calibrate(self, foto, mtx, dist):
-        self.cameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx,
+    def calibrate(foto, mtx, dist):
+        cameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx,
                                                           dist,
                                                           (foto.shape[1], foto.shape[0] ),
                                                           1,
                                                           (foto.shape[1] , foto.shape[0]))
-        mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, self.cameramtx, (foto.shape[1], foto.shape[0]), 5)
+        mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, cameramtx, (foto.shape[1], foto.shape[0]), 5)
         foto_calibrada = cv2.remap(foto, mapx, mapy, cv2.INTER_LINEAR)
+        foto_calibrada_cuadrado = np.copy(foto_calibrada, order = "K", subok = True)
         # crop the image
         x, y, w, h = roi
-        foto_calibrada_recortada = foto_calibrada[y:y+h, x:x+w]
+        foto_calibrada_recortada = np.copy(foto_calibrada[y:y+h, x:x+w], order = "K", subok = True)
         # dibujando cuadrado en la imagen calibrada del area de interes
         for j in range(x, x + w):
             for doble_linea in range(0, 2):
-                foto_calibrada[y + doble_linea, j] = [239,184,16]
-                foto_calibrada[y + h + doble_linea, j] = [239,184,16]
+                foto_calibrada_cuadrado[y + doble_linea, j] = [239,184,16]
+                foto_calibrada_cuadrado[y + h + doble_linea, j] = [239,184,16]
         for i in range(y, y + h):
             for doble_linea in range(0, 2):
-                foto_calibrada[i, x + doble_linea] = [239,184,16]
-                foto_calibrada[i, x + w + doble_linea] = [239,184,16]
-        return foto_calibrada, foto_calibrada_recortada 
-        
-    def get_foto_3d_from_2d(self,foto, cameramtx, R, T):
+                foto_calibrada_cuadrado[i, x + doble_linea] = [239,184,16]
+                foto_calibrada_cuadrado[i, x + w + doble_linea] = [239,184,16]
+        return foto_calibrada, foto_calibrada_recortada, roi
+
+    def get_foto_3d_from_2d(ft, cameramtx, R, T):
         # z es constante a la altura de la imagen
+        Z = 5
+        foto = np.empty_like(ft, dtype = None, order = "K", subok = True)
+        A_matrix = np.linalg.inv(cameramtx)
+        for i in range(0,ft.shape[0]):
+            for j in range(0,ft.shape[1]):
+                B_matrix = np.matrix([[i],[j],[1]])
+                puntos = np.linalg.solve(A_matrix, B_matrix)
+                foto[i, j] = [puntos[0] * Z, puntos[1] * Z, puntos[2] * Z]
+        return foto
 
-        R_matrix,_ = cv2.Rodrigues(R[0])
-        T_vector = T[0]
-        R_T = np.hstack((R_matrix, T_vector))
-        Fx = cameramtx[0,0]
-        Fy = cameramtx[1,1]
-        Cx = cameramtx[0,2]
-        Cy = cameramtx[1,2]
-        A_matrix = np.matrix([[(Fx*R_T[0,0] + Cx*R_T[2,0]), (Fx*R_T[0,1] + Cx*R_T[2,1]), (Fx*R_T[0,2] + Cx*R_T[2,2])],
-                              [(Fy*R_T[10] + Cy*R_T[2,0]), (Fy*R_T[1,1] + Cy*R_T[2,1]), (Fy*R_T[1,2] + Cy*R_T[2,2])],
-                              [(R_T[2,0]), (R_T[2,1]), (R_T[2,2])]])
-        puntos_3d = list()
-        for i in range(0,foto.shape[0]):
-            for j in range(0,foto.shape[1]):
-                B_matrix = np.matrix([[i - (Fx*R_T[0,3] + Cx*R_T[2,3])],
-                                      [j - (Fy*R_T[1,3] + Cy*R_T[2,3])],
-                                      [1 - ( R_T[2,3])]])
-                puntos_3d.append(np.linalg.solve(A_matrix, B_matrix))
-        return puntos_3d
+    def area(self, puntos_interes):
+        pass
 
+    def plot(self):
+        pass
 
 class Segmentacion():
-    def __init__(self, foto_calibrada,
+    def __init__(self,
                 distancia,
+                temp_incendio,
                 min_group_pixel_size,
-                *arg,
                 **args):
-
-        #reshaping foto from 3 dimensions to 2 dimensions
-        self.foto_reshaped = self.foto_calibrada_recortada_segmentada.reshape((-1,3))
-        #converting to float
-        self.foto_reshaped = np.float32(self.foto_reshaped)
-        self.distancia = distancia
+        self.distancia_puntos = distancia
         self.min_group_pixel_size = min_group_pixel_size
-        self.colores_dictionario_labels = {}
+        self.temp_incendio = temp_incendio
 
-    def segmentacion(self):
-        self.clustering = DBSCAN(eps = self.distancia, min_samples = self.min_group_pixel_size, p = 3)
-        self.clustering.fit(self.foto_reshaped)
-        self.reshaped_result = self.clustering.labels_.reshape((self.foto_calibrada_recortada_segmentada.shape[0], self.foto_calibrada_recortada_segmentada.shape[1]))
+    def segmentacion(self,
+                     foto_temperatura_scalada,
+                     foto_undistorted,
+                     ROI):
+        x, y, w, h = ROI
+        foto_undistorted_c = np.copy(foto_undistorted, order = "K", subok = True)
+        for i in range(0, foto_undistorted.shape[0]):
+                for j in range(0, foto_undistorted.shape[1]):
+                    foto_undistorted_c[i,j] =  [255, 255, 255]   
+        
+        incendio = []
         #redrwing picture
-        for i in range(0, self.foto_calibrada_recortada_segmentada.shape[0]):
-            for j in range(0, self.foto_calibrada_recortada_segmentada.shape[1]):
-                if self.colores_dictionario_labels.get(self.reshaped_result[i, j]) is None:
-                    self.colores_dictionario_labels[self.reshaped_result[i, j]] = self.foto_calibrada_recortada_segmentada[i, j]
-                else:
-                    #self.colores_dictionario_labels[self.reshaped_result[i, j]] = (self.colores_dictionario_labels.get(self.reshaped_result[i, j]) + self.foto__[i, j])/2
-                    self.foto_calibrada_recortada_segmentada[i, j] = self.colores_dictionario_labels.get(self.reshaped_result[i, j])
-        cv2.imshow("segmentacion", self.foto_calibrada_recortada_segmentada)
+        for i in range(0, foto_temperatura_scalada.shape[0]):
+            for j in range(0, foto_temperatura_scalada.shape[1]):
+                if foto_temperatura_scalada[i,j]>= (self.temp_incendio):
+                    incendio.append([i, j])
+                    foto_undistorted_c[y + i, j + x] = foto_undistorted[y + i, j + x]
+
+        return incendio, foto_undistorted_c
+
+
+
+                

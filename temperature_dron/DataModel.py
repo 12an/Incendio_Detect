@@ -4,6 +4,7 @@ import glob
 from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
 import sqlite3
+import numpy as np
 
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
@@ -85,12 +86,16 @@ class IncendioData():
                  *arg,
                  **args):
         self.ID_data = ID_data
-        self.foto_camara = foto_camara
-        self.foto_fitro = None
-        self.foto_undistorted = None
-        self.foto_undistorted_cut = None
-        self.matrix_foto = None
-        self.foto_temperatura_scaled = None
+        self.foto_camara = foto_camara #foto original
+        self.foto_fitro = None # foto con algunos filtros
+        self.foto_undistorted = None # sin los efectos distorcion del lente
+        self.foto_undistorted_cut = None # quitada toda la parte innecesaria para procesamiento
+        self.foto_word_coordinate= None # donde se localizan cada pixel en el mundo real
+        self.foto_undistorted_segmentada = None  # imagen a color del area del incendio      
+        self.foto_temperatura_scaled = None #foto con pixeles transformado a su respectiva temperatura
+        self.segmentos_coordenadas = {}  #dictionario, parte de interes del fuego, calcular area
+        self.ROI = None #recortes de interes de la imagen undistorted
+
 
 
 class Data_SQL(Path):

@@ -20,9 +20,11 @@ class CameraIntrisicsValue():
         self.intrisics = list()
 
 
-    def extracting_corners(self, foto):
+    def extracting_corners(self, ft):
+        foto = np.copy(ft, order = "K", subok = True)
         gray = cv2.cvtColor(foto, cv2.COLOR_BGR2GRAY)
         self.shape = foto.shape[:2]
+        
         # Find the chess board corners
         # If desired number of corners are found in the image then ret = true
         

@@ -6,13 +6,15 @@ from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
-from TransformFotos import RGBToTemperatureScale, TemperaturaMax, FiltroFotos, CalibrateFoto
+from TransformFotos import RGBToTemperatureScale, TemperaturaMax, FiltroFotos, CalibrateFoto, Segmentacion
 from datetime import datetime
 import numpy as np
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
 import traceback
 from camera import CameraIntrisicsValue
 import cv2
+import matplotlib.pyplot as plt
+plt.style.use('_mpl-gallery')
 
 class WorkerSignals(QObject):
     '''
@@ -50,7 +52,7 @@ class threadRGbtemperatura(QRunnable):
         try:
             for i in range(0,self.foto_.shape[0], self.step_sampling):
                 for j in range(0, self.foto_.shape[1], self.step_sampling):
-                    foto_temperatura[i//self.step_sampling, j//self.step_sampling ] = self.fiting_model.predict(np.array([self.foto_[i,j]]))
+                    foto_temperatura[i//self.step_sampling, j//self.step_sampling ] = self.fiting_model.predict(np.array([self.foto_[i,j][0:2]]))
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
@@ -86,17 +88,11 @@ class threadMaxTemperatura(QRunnable, TemperaturaMax):
 class ControlModel(ViewControl, 
                    DatosControl,
                    RGBToTemperatureScale,
-                   CalibrateFoto):
+                   Segmentacion):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
         self.index = 0
-        # cargando app
-        ViewControl.__init__(self)
-        #datos
-        DatosControl.__init__(self)
-        RGBToTemperatureScale.__init__(self)
-        
         #variables y constantes
         self.resolucion_camera = [1920, 1080]
         self.CHECKERBOARD_SIZE = [5, 5]
@@ -105,8 +101,17 @@ class ControlModel(ViewControl,
         self.click_siguiente = 0
         self.index_fotos_calibracion = 0
         self.click_siguiente_chesspatern = 0
+        self.temp_incendio = 27
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
+        # cargando app
+        ViewControl.__init__(self)
+        #datos
+        DatosControl.__init__(self)
+        RGBToTemperatureScale.__init__(self)
+        Segmentacion.__init__(self,**{"distancia":3,
+                                      "min_group_pixel_size":3,
+                                      "temp_incendio":self.temp_incendio})
         self.camera_instrisics_ = CameraIntrisicsValue(self.CHECKERBOARD_SIZE)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
         ## Creating cursor object and namimg it as cursor
@@ -182,8 +187,9 @@ class ControlModel(ViewControl,
         self.CancelarCambios_observaciones_evento()
         self.Show_frames(self.imagenes_procesamiento[self.index].foto_camara,
                          "Foto_Camara")
-        self.Show_frames(self.imagenes_procesamiento[self.index].foto_undistorted,
-                         "ImagenProcesada")
+        if isinstance(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada, np.ndarray):
+            self.Show_frames(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada,
+                             "ImagenProcesada")
         
         
     def build_url(self):
@@ -196,19 +202,38 @@ class ControlModel(ViewControl,
         def innner(self, *arg,**args):
             index = func(self, *arg,**args)
             if self.index <= (self.total_incendio - 1):
-                if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
-                    self.block_index_updating = True
-                    self.from_RGB_to_temp(self.imagenes_procesamiento[index].foto_camara, 1, True)
+                
                 if not(isinstance(self.imagenes_procesamiento[index].foto_fitro, np.ndarray)):
                     _filtro = FiltroFotos(self.imagenes_procesamiento[index].foto_camara)
                     self.imagenes_procesamiento[index].foto_fitro = _filtro.foto_bilate
-                if not(isinstance(self.imagenes_procesamiento[index].foto_undistorted, np.ndarray)):
-                    _undistorted, cut_undistorted = self.calibrate(self.imagenes_procesamiento[index].foto_fitro,
-                                                                   self.mtx,
-                                                                   self.dist)
-                    self.get_foto_3d_from_2d(self.rvecs, self.tvecs)
+                    
+                if not(isinstance(self.imagenes_procesamiento[index].foto_undistorted_cut, np.ndarray)):
+                    _undistorted, cut_undistorted, ROI = CalibrateFoto.calibrate(self.imagenes_procesamiento[index].foto_fitro,
+                                                                                 self.mtx,
+                                                                                 self.dist)
+
+                    
                     self.imagenes_procesamiento[index].foto_undistorted_cut = cut_undistorted
                     self.imagenes_procesamiento[index].foto_undistorted = _undistorted
+                    
+                    self.imagenes_procesamiento[index].ROI = ROI
+                    word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
+                                                                    self.mtx,
+                                                                    self.rvecs,
+                                                                    self.tvecs)
+                    self.imagenes_procesamiento[index].foto_word_coordinate = word_object  
+
+                if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
+                    self.block_index_updating = True
+                    self.from_RGB_to_temp(self.imagenes_procesamiento[index].foto_undistorted_cut, 1, True)
+
+                if isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray):
+                    
+                    incendio, imagen = self.segmentacion(self.imagenes_procesamiento[index].foto_temperatura_scaled,
+                                                 self.imagenes_procesamiento[index].foto_undistorted,
+                                                 self.imagenes_procesamiento[index].ROI)
+                    self.imagenes_procesamiento[index].segmentos_coordenadas = incendio
+                    self.imagenes_procesamiento[index].foto_undistorted_segmentada = imagen
                 self.load_data_show(index)
                 self.build_url()
                 self.update()
