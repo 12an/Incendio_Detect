@@ -54,21 +54,6 @@ class Path():
                 self.name_actual_carpet = value
 
 
-class Quantity:
-    def __init__(self, managed_attribute_name):
-        print(f'managing attribute {managed_attribute_name}')
-        self._managed_attribute_name = managed_attribute_name
-
-    def __get__(self, instance, owner):
-        print(f'{self._managed_attribute_name} get')
-        return instance.__dict__[self._managed_attribute_name]
-
-    def __set__(self, instance, value):
-        print(f'{self._managed_attribute_name} set {value}')
-        if value > 0:
-            instance.__dict__[self._managed_attribute_name] = value
-
-
 class BoolData(Path, DumpPumpVariable):
     def __init__(self, value, variable_name):
         Path.__init__(self)
@@ -138,7 +123,7 @@ class Data_SQL(Path):
         self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitud_row)
         self.conection.commit()
         #GUARDANDO FOTO
-        imwrite(self.go_to("foto_dir") + str(max_id) + ".png", foto_normal)
+        imwrite(self.go_to("foto_dir") + str(max_id) + ".jpeg", foto_normal)
 
     def update(func):
         def inner(self, *arg, **args):

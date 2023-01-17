@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from sklearn.cluster import DBSCAN, OPTICS
 from sklearn.linear_model import LinearRegression
+import math as mt
 
 
 class FiltroFotos:
@@ -87,8 +88,41 @@ class CalibrateFoto():
                 foto[i, j] = [puntos[0] * Z, puntos[1] * Z, puntos[2] * Z]
         return foto
 
-    def area(self, puntos_interes):
-        pass
+    def area(self, puntos_interes, foto_word_view):
+        area = 0
+        foto_3d_view = np.copy(foto_word_view, order = "K", subok = True)        
+        #se medira desde izquierda derecha, arriba abajo, 
+        #cuadrado abcd
+        #area basada en trangulos abc y adc (por si las distancias son irregulares)
+        
+        for punto in puntos_interes:
+            #punto a es el punto generado de la lista
+            #punto b es punto correspondiente al i + 1
+            #punto c es el punto j - 1
+            #punto d es i + 1, j - 1
+            a = foto_3d_view[punto[0], punto[1]]
+            b = foto_3d_view[punto[0] + 1, punto[1]]
+            c = foto_3d_view[punto[0], punto[1] - 1]
+            d = foto_3d_view[punto[0] + 1, punto[1] - 1]
+            distancia_ab = self.distancia(a,b)
+            distancia_bc = self.distancia(b,c)
+            distancia_ac = self.distancia(a,c)
+            distancia_ad = self.distancia(a,d)
+            distancia_dc = self.distancia(d,c)
+            area_abc = self.area_heron_triangulo(distancia_ab,
+                                                 distancia_bc,
+                                                 distancia_ac)
+            area_adc = self.area_heron_triangulo(distancia_ad,
+                                                 distancia_dc,
+                                                 distancia_ac)
+            area += area_abc + area_adc
+    def distancia(a,b):
+        return mt.sqrt(mt.pow((a[0] - b[0]), 2) + mt.pow((a[1] - b[1]), 2))
+
+    def area_heron_triangulo(a, b, c):
+        #calculo area en base formula heron
+        s = (a + b + c)/2
+        return mt.sqrt((s * (s - a) * (s - b) * (s - c)))
 
     def plot(self):
         pass

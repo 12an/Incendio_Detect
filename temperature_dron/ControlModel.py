@@ -130,7 +130,7 @@ class ControlModel(ViewControl,
         # creando timer recurrente leer y procesar fotos
         self.timer = QTimer()
         self.timer.timeout.connect(self.nueva_mision_dron_app)
-        self.timer.start(2)#segundos
+        self.timer.start(3)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
 
@@ -166,7 +166,6 @@ class ControlModel(ViewControl,
     def load_data_show(self, index):
         self.ID_actual_sql_management["id"] = self.imagenes_procesamiento[index].ID_data
         self.fecha = self.fecha_sql()
-        
         self.hora = self.hora_sql()
         self.categoria = self.categoria_sql()
         self.area = self.area_sql()
@@ -202,7 +201,7 @@ class ControlModel(ViewControl,
         def innner(self, *arg,**args):
             index = func(self, *arg,**args)
             if self.index <= (self.total_incendio - 1):
-                
+                self.load_data_show(index)
                 if not(isinstance(self.imagenes_procesamiento[index].foto_fitro, np.ndarray)):
                     _filtro = FiltroFotos(self.imagenes_procesamiento[index].foto_camara)
                     self.imagenes_procesamiento[index].foto_fitro = _filtro.foto_bilate
@@ -211,30 +210,17 @@ class ControlModel(ViewControl,
                     _undistorted, cut_undistorted, ROI = CalibrateFoto.calibrate(self.imagenes_procesamiento[index].foto_fitro,
                                                                                  self.mtx,
                                                                                  self.dist)
-
-                    
                     self.imagenes_procesamiento[index].foto_undistorted_cut = cut_undistorted
                     self.imagenes_procesamiento[index].foto_undistorted = _undistorted
-                    
                     self.imagenes_procesamiento[index].ROI = ROI
                     word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
                                                                     self.mtx,
                                                                     self.rvecs,
                                                                     self.tvecs)
                     self.imagenes_procesamiento[index].foto_word_coordinate = word_object  
-
                 if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
                     self.block_index_updating = True
                     self.from_RGB_to_temp(self.imagenes_procesamiento[index].foto_undistorted_cut, 1, True)
-
-                if isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray):
-                    
-                    incendio, imagen = self.segmentacion(self.imagenes_procesamiento[index].foto_temperatura_scaled,
-                                                 self.imagenes_procesamiento[index].foto_undistorted,
-                                                 self.imagenes_procesamiento[index].ROI)
-                    self.imagenes_procesamiento[index].segmentos_coordenadas = incendio
-                    self.imagenes_procesamiento[index].foto_undistorted_segmentada = imagen
-                self.load_data_show(index)
                 self.build_url()
                 self.update()
                 self.anterior_index = index
@@ -260,6 +246,7 @@ class ControlModel(ViewControl,
         return self.index
 
     def cargar_datos_dron(self):
+        print("cargando")
         self.read_actual_coordenates_dron()
         self.read_battery_dron()
         latitud = self.coordenadas_actual_dron.get("latitude")
@@ -321,13 +308,16 @@ class ControlModel(ViewControl,
             current_datetime = datetime.now()
             hora = current_datetime.strftime("%H:%M")
             fecha = current_datetime.strftime("%m-%d-%Y")
+            self.read_actual_coordenates_dron()
             latitud = self.coordenadas_actual_dron.get("latitude")
             longitud = self.coordenadas_actual_dron.get("longitud")
+            print(latitud)
+            print(longitud)
             altura = self.read_actual_altura_dron()
             self.guardar_nuevo_incendio_datos(**{"fecha":fecha,
                                                  "hora":hora,
                                                  "categoria":0,
-                                                 "area":0,
+                                                 "area":-1,
                                                  "estimacion":"n/a",
                                                  "latitude":{"grados":latitud[0], "minutos":latitud[1], "seundos":latitud[2]},
                                                  "longitud":{"grados":longitud[0], "minutos":longitud[1], "seundos":longitud[2]},
@@ -342,6 +332,14 @@ class ControlModel(ViewControl,
 
     def from_RGB_to_temp_save(self, foto_temperatura):
         self.imagenes_procesamiento[self.index].foto_temperatura_scaled = foto_temperatura
+        incendio, imagen = self.segmentacion(self.imagenes_procesamiento[self.index].foto_temperatura_scaled,
+                                             self.imagenes_procesamiento[self.index].foto_undistorted,
+                                             self.imagenes_procesamiento[self.index].ROI)
+        self.imagenes_procesamiento[self.index].segmentos_coordenadas = incendio
+        self.imagenes_procesamiento[self.index].foto_undistorted_segmentada = imagen
+        if self.area == -1:
+            self.area = CalibrateFoto.area(incendio, 
+                                           self.imagenes_procesamiento[self.index].foto_word_coordinate)
         self.block_index_updating = False
     
     def from_RGB_to_temp(self, foto_, step_sampling, foto_temp_save = False):

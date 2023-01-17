@@ -16,7 +16,6 @@ class CameraIntrisicsValue():
         self.objpoints = list()
         # Creating vector to store vectors of 2D points for each checkerboard image
         self.imgpoints = list()
-
         self.intrisics = list()
 
 
