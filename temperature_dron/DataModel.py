@@ -4,7 +4,7 @@ import glob
 from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
 import sqlite3
-import numpy as np
+
 
 class DumpPumpVariable():
     def dump(self, directorio, variable_name, variable):
@@ -308,6 +308,11 @@ class DatosControl(DumpPumpVariable,
     def status_mision(self):
         self.mision_status = self.pump(self.go_to("data_dir"), "mision_status")
         return self.mision_status
+
+    def write_status_mision(self, value):
+        self.dump(self.go_to("data_dir"),
+                  "mision_status",
+                  value)
 
     def foto_spam(self):
         return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.jpeg"), COLOR_RGB2BGR)

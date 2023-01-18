@@ -1,5 +1,4 @@
 # This Python file uses the following encoding: utf-8
-import os
 import sys
 from PySide6.QtWidgets import QApplication
 from ViewControl import ViewControl, MplCanvas
@@ -12,7 +11,7 @@ import numpy as np
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
 import traceback
 from camera import CameraIntrisicsValue
-import cv2
+
 
 
 class WorkerSignals(QObject):
@@ -321,10 +320,13 @@ class ControlModel(ViewControl,
                                                  "longitud":longitud,
                                                  "foto_normal":self.foto_temp_spam,
                                                  "altura":altura})
+            #terminamos y ponemos en false la variable
+            self.write_status_mision(False)
             #update fotos list
             self.open_foto_analisis()
         self.block_thread_finished = False
-    
+
+
     def from_RGB_to_temp_complete(self, foto_temperatura):
         self.is_max_trigger_foto(foto_temperatura)
 
