@@ -1,7 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
 from PySide6.QtWidgets import QApplication
-from ViewControl import ViewControl, MplCanvas
+from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
@@ -99,7 +99,8 @@ class ControlModel(ViewControl,
         self.click_siguiente = 0
         self.index_fotos_calibracion = 0
         self.click_siguiente_chesspatern = 0
-        self.temp_incendio = 27
+        self.temp_incendio = 85
+        
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
         # cargando app
@@ -131,8 +132,7 @@ class ControlModel(ViewControl,
         self.timer2.start(60)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
-        #plot para 3d puntos
-        self.local_3d_word_plot = MplCanvas(self, width=5, height=4, dpi=100)
+
 
 
     def GuardarCambios_observaciones_evento(self):
@@ -189,8 +189,14 @@ class ControlModel(ViewControl,
         if isinstance(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada, np.ndarray):
             self.Show_frames(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada,
                              "ImagenProcesada")
+            x, y, z = CalibrateFoto.plot_3d(self.imagenes_procesamiento[self.index].segmentos_coordenadas,
+                                                    self.imagenes_procesamiento[self.index].foto_word_coordinate)
+            """self.show_plot_3d(x,
+                              y,
+                              z,
+                              "local_3d_word_plot")"""
         
-        
+
     def build_url(self):
         semi_url_domain = "https://www.google.com/maps/place/"
         self.coordenada_url_latitude = str(self.grados_latitude) + "°" + str(self.minutos_latitude) + "'" + str(self.segundos_latitude) + '"' + "N"
@@ -213,10 +219,14 @@ class ControlModel(ViewControl,
                     self.imagenes_procesamiento[index].foto_undistorted_cut = cut_undistorted
                     self.imagenes_procesamiento[index].foto_undistorted = _undistorted
                     self.imagenes_procesamiento[index].ROI = ROI
-                    word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
-                                                                    self.mtx,
-                                                                    self.rvecs,
-                                                                    self.tvecs)
+                    if isinstance(self.altura, int):
+                        word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
+                                                                        self.mtx,
+                                                                        self.altura)
+                    else:
+                        word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
+                                                                        self.mtx,
+                                                                        2)                        
                     self.imagenes_procesamiento[index].foto_word_coordinate = word_object  
                 if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
                     self.block_index_updating = True

@@ -8,15 +8,18 @@ from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWebEngineCore import *
 from widget import Widget
 from cv2 import cvtColor, COLOR_RGB2BGR
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+'''from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+        self.axes = fig.add_subplot(111, projection='3d')
+        self.axes.set_xlabel('X Label')
+        self.axes.set_ylabel('Y Label')
+        self.axes.set_zlabel('Z Label')
+        super(MplCanvas, self).__init__(fig)'''
 
 
 class ViewControl(Widget):
@@ -38,10 +41,6 @@ class ViewControl(Widget):
         self.ui.CalcularCalibracion.clicked.connect(self.Calcular_Calibracion_evento)
         self.ui.tabWidget.currentChanged.connect(self.onChange)
         self.ui.tabWidget.blockSignals(False) #now listen the currentChanged signal
-        # imagen 3d
-        self.plot_layout = list()
-        self.plot_layout.append(self.ui.mapa_3d)
-        self.plot_layout.append(self.ui.mapa_2d)
         # imagen tab 3 detalles
         self.fotos = list()
         for obj in range(0,4):
@@ -69,7 +68,13 @@ class ViewControl(Widget):
                                   "ImagenProcesada":(self.fotos[1], [381, 248]),
                                   "Foto_calibracion_antes":(self.fotos[2], [441, 501]),
                                   "Foto_calibracion_despues":(self.fotos[3], [441, 501])}
-        
+        #plot para 3d puntos
+        '''self.local_3d_word_plot = MplCanvas(self, width=5, height=4, dpi=100)
+        self.plot_size_view = {"local_3d_word_plot":self.local_3d_word_plot
+            }
+        self.ui.mapa_3d.addWidget(self.local_3d_word_plot,
+                                  1,
+                                  1)  '''     
 
     def Show_frames(self, frame, foto_name):
         """
@@ -148,19 +153,11 @@ class ViewControl(Widget):
     def get_text_estimacion(self):
         return self.ui.textEdit.toPlainText()
 
-    def show_plot_3d(self, puntos, index_layout):
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.scatter(puntos[0], puntos[1], puntos[2], marker=m)
-        ax.set_xlabel('X Label')
-        ax.set_ylabel('Y Label')
-        ax.set_zlabel('Z Label')
+    def show_plot_3d(self, x, y, z, layout):
+        '''plot_object = self.plot_size_view.get(layout)
+        plot_object.axes.scatter(x, y, z)'''
+        pass
 
-        plt.show()
-        
-        self.plot_layout[index_layout].addWidget(canvas_plot,
-                                                 1,
-                                                 1)
 
     def siguiente(self):
         pass

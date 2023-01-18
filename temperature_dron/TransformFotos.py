@@ -39,7 +39,7 @@ class TemperaturaMax:
 
 class RGBToTemperatureScale:
     def __init__(self):
-        self.puntos_temp_RGB = {"60.0":[251,249],
+        self.puntos_temp_RGB = {"90.0":[251,249],
                                 "9.3":[9,0]
                                 }
         Y_matrix = list()
@@ -76,9 +76,9 @@ class CalibrateFoto():
                 foto_calibrada_cuadrado[i, x + w + doble_linea] = [239,184,16]
         return foto_calibrada, foto_calibrada_recortada, roi
 
-    def get_foto_3d_from_2d(ft, cameramtx, R, T):
+    def get_foto_3d_from_2d(ft, cameramtx, altura):
         # z es constante a la altura de la imagen
-        Z = 5
+        Z = altura
         foto = np.empty_like(ft, dtype = None, order = "K", subok = True)
         A_matrix = np.linalg.inv(cameramtx)
         for i in range(0,ft.shape[0]):
@@ -124,8 +124,13 @@ class CalibrateFoto():
         s = (a + b + c)/2
         return mt.sqrt((s * (s - a) * (s - b) * (s - c)))
 
-    def plot(self):
-        pass
+    def plot_3d(puntos_interes, foto_word_view):
+        foto_3d_view = np.copy(foto_word_view, order = "K", subok = True)         
+        for punto in puntos_interes:
+            x = foto_3d_view[punto[0], punto[1]][0]
+            y = foto_3d_view[punto[0], punto[1]][1]
+            z = foto_3d_view[punto[0], punto[1]][2]
+        return x, y, z 
 
 class Segmentacion():
     def __init__(self,
