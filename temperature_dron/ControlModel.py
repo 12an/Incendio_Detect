@@ -2,7 +2,7 @@
 import os
 import sys
 from PySide6.QtWidgets import QApplication
-from ViewControl import ViewControl
+from ViewControl import ViewControl, MplCanvas
 from DataModel import DatosControl, BoolData
 import sqlite3
 from PySide6.QtCore import QTimer
@@ -13,8 +13,7 @@ from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
 import traceback
 from camera import CameraIntrisicsValue
 import cv2
-import matplotlib.pyplot as plt
-plt.style.use('_mpl-gallery')
+
 
 class WorkerSignals(QObject):
     '''
@@ -128,11 +127,13 @@ class ControlModel(ViewControl,
         self.timer.timeout.connect(self.cargar_datos_dron)
         self.timer.start(2)#segundos
         # creando timer recurrente leer y procesar fotos
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.nueva_mision_dron_app)
-        self.timer.start(3)#segundos
+        self.timer2 = QTimer()
+        self.timer2.timeout.connect(self.nueva_mision_dron_app)
+        self.timer2.start(60)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
+        #plot para 3d puntos
+        self.local_3d_word_plot = MplCanvas(self, width=5, height=4, dpi=100)
 
 
     def GuardarCambios_observaciones_evento(self):
@@ -246,7 +247,6 @@ class ControlModel(ViewControl,
         return self.index
 
     def cargar_datos_dron(self):
-        print("cargando")
         self.read_actual_coordenates_dron()
         self.read_battery_dron()
         latitud = self.coordenadas_actual_dron.get("latitude")
@@ -311,16 +311,14 @@ class ControlModel(ViewControl,
             self.read_actual_coordenates_dron()
             latitud = self.coordenadas_actual_dron.get("latitude")
             longitud = self.coordenadas_actual_dron.get("longitud")
-            print(latitud)
-            print(longitud)
             altura = self.read_actual_altura_dron()
             self.guardar_nuevo_incendio_datos(**{"fecha":fecha,
                                                  "hora":hora,
                                                  "categoria":0,
                                                  "area":-1,
                                                  "estimacion":"n/a",
-                                                 "latitude":{"grados":latitud[0], "minutos":latitud[1], "seundos":latitud[2]},
-                                                 "longitud":{"grados":longitud[0], "minutos":longitud[1], "seundos":longitud[2]},
+                                                 "latitude":latitud,
+                                                 "longitud":longitud,
                                                  "foto_normal":self.foto_temp_spam,
                                                  "altura":altura})
             #update fotos list
@@ -340,6 +338,7 @@ class ControlModel(ViewControl,
         if self.area == -1:
             self.area = CalibrateFoto.area(incendio, 
                                            self.imagenes_procesamiento[self.index].foto_word_coordinate)
+            self.update_area(self.area)
         self.block_index_updating = False
     
     def from_RGB_to_temp(self, foto_, step_sampling, foto_temp_save = False):

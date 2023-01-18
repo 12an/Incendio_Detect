@@ -8,6 +8,16 @@ from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWebEngineCore import *
 from widget import Widget
 from cv2 import cvtColor, COLOR_RGB2BGR
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+
 
 class ViewControl(Widget):
     def __init__(self):
@@ -138,7 +148,16 @@ class ViewControl(Widget):
     def get_text_estimacion(self):
         return self.ui.textEdit.toPlainText()
 
-    def show_plot(self, canvas_plot, index_layout):
+    def show_plot_3d(self, puntos, index_layout):
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(puntos[0], puntos[1], puntos[2], marker=m)
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
+
+        plt.show()
+        
         self.plot_layout[index_layout].addWidget(canvas_plot,
                                                  1,
                                                  1)

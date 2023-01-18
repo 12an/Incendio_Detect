@@ -111,13 +111,14 @@ class Data_SQL(Path):
         self.conection.commit()
         max_id = self.get_max_id()
         data_latitude_row = (max_id,
-                             latitude.get("grados"),
-                             latitude.get("minutos"),
-                             latitude.get("segundos"))
+                             latitude[0],
+                             latitude[1],
+                             latitude[2])
         data_longitud_row = (max_id,
-                             longitud.get("grados"),
-                             longitud.get("minutos"),
-                             longitud.get("segundos"))
+                             longitud[0],
+                             longitud[1],
+                             longitud[2])
+        print(data_longitud_row)
         self.cursor.execute("INSERT INTO COORDENADA_LATITUDE(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_latitude_row)
         self.conection.commit()
         self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitud_row)
