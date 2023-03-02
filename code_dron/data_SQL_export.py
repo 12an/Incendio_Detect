@@ -20,7 +20,7 @@ class Path():
                              "dron_dir" : "code_dron",
                              "chess_dir" : "fotos_chess_pattern",
                              "main_dir" : "temperature_dron",
-                             "fotos_spam_dir" : "fotos_analisis\\fotos_spam",}
+                             "fotos_spam_dir" : "fotos_analisis/fotos_spam",}
         self.get_actual_dir()
     """
     optener data con una key relacionada al diccionario
@@ -34,7 +34,7 @@ class Path():
         self.current_dir = self.current_dir.replace(self.name_actual_carpet,
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
-        return self.current_dir + "\\"
+        return self.current_dir + "/"
         
     def get_actual_dir(self):
         for key, value in self.carpetas_dir.items():
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     mision_status = True
     FOTO = "aqui va la foto"
     #imwrite(text_path.go_to("fotos_spam_dir") + "spam" + ".jpeg", FOTO)
-    read_bool = DumpPumpVariable().pump(text_path.go_to("data_dir"), "start_mision")
+
     DumpPumpVariable().dump(text_path.go_to("data_dir"), "mision_status", mision_status)
     DumpPumpVariable().dump(text_path.go_to("data_dir"), "bateria_data_dron", bateria_porcentage)
     DumpPumpVariable().dump(text_path.go_to("data_dir"), "coordenadas_dron", coordenadas)    

@@ -8,18 +8,27 @@ from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWebEngineCore import *
 from widget import Widget
 from cv2 import cvtColor, COLOR_RGB2BGR
-'''from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+import matplotlib
+# specify the use of PySide
+matplotlib.use('QtAgg')
+
+
+# import the figure canvas for interfacing with the backend
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+
+# import 3D plotting
+from mpl_toolkits.mplot3d import Axes3D    # @UnusedImport
 from matplotlib.figure import Figure
 
 
-class MplCanvas(FigureCanvasQTAgg):
+class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111, projection='3d')
         self.axes.set_xlabel('X Label')
         self.axes.set_ylabel('Y Label')
         self.axes.set_zlabel('Z Label')
-        super(MplCanvas, self).__init__(fig)'''
+        super(MplCanvas, self).__init__(fig)
 
 
 class ViewControl(Widget):

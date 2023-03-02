@@ -86,30 +86,32 @@ class threadMaxTemperatura(QRunnable, TemperaturaMax):
 class ControlModel(ViewControl, 
                    DatosControl,
                    RGBToTemperatureScale,
-                   Segmentacion):
+                   Segmentacion,
+                   CalibrateFoto):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
         self.index = 0
         #variables y constantes
-        self.resolucion_camera = [1920, 1080]
         self.CHECKERBOARD_SIZE = [5, 5]
-        self.max_expected_temp = 55
+        
         self.index = 0
         self.click_siguiente = 0
         self.index_fotos_calibracion = 0
         self.click_siguiente_chesspatern = 0
-        self.temp_incendio = 85
-        
+        # temperaturas utiles para la segmentacion y transformacion temperatura pixel
+        self.temp_incendio = 50
+        self.max_expected_temp = 90
+        self.min_expected_temp = 30
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
         # cargando app
         ViewControl.__init__(self)
         #datos
         DatosControl.__init__(self)
-        RGBToTemperatureScale.__init__(self)
+        RGBToTemperatureScale.__init__(self, self.max_expected_temp,
+                                       self.min_expected_temp)
         Segmentacion.__init__(self,**{"distancia":3,
-                                      "min_group_pixel_size":3,
                                       "temp_incendio":self.temp_incendio})
         self.camera_instrisics_ = CameraIntrisicsValue(self.CHECKERBOARD_SIZE)
         self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
@@ -189,7 +191,7 @@ class ControlModel(ViewControl,
         if isinstance(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada, np.ndarray):
             self.Show_frames(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada,
                              "ImagenProcesada")
-            x, y, z = CalibrateFoto.plot_3d(self.imagenes_procesamiento[self.index].segmentos_coordenadas,
+            x, y, z = self.plot_3d(self.imagenes_procesamiento[self.index].segmentos_coordenadas,
                                                     self.imagenes_procesamiento[self.index].foto_word_coordinate)
             """self.show_plot_3d(x,
                               y,
@@ -213,20 +215,20 @@ class ControlModel(ViewControl,
                     self.imagenes_procesamiento[index].foto_fitro = _filtro.foto_bilate
                     
                 if not(isinstance(self.imagenes_procesamiento[index].foto_undistorted_cut, np.ndarray)):
-                    _undistorted, cut_undistorted, ROI = CalibrateFoto.calibrate(self.imagenes_procesamiento[index].foto_fitro,
+                    _undistorted, cut_undistorted, ROI = self.calibrate(self.imagenes_procesamiento[index].foto_fitro,
                                                                                  self.mtx,
                                                                                  self.dist)
                     self.imagenes_procesamiento[index].foto_undistorted_cut = cut_undistorted
                     self.imagenes_procesamiento[index].foto_undistorted = _undistorted
                     self.imagenes_procesamiento[index].ROI = ROI
                     if isinstance(self.altura, int):
-                        word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
+                        word_object = self.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
                                                                         self.mtx,
-                                                                        self.altura)
+                                                                        59)
                     else:
-                        word_object = CalibrateFoto.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
+                        word_object = self.get_foto_3d_from_2d(self.imagenes_procesamiento[index].foto_undistorted_cut,
                                                                         self.mtx,
-                                                                        2)                        
+                                                                        59)
                     self.imagenes_procesamiento[index].foto_word_coordinate = word_object  
                 if not(isinstance(self.imagenes_procesamiento[index].foto_temperatura_scaled, np.ndarray)  and not(self.block_index_updating)):
                     self.block_index_updating = True
@@ -240,14 +242,12 @@ class ControlModel(ViewControl,
     def siguiente(self):
         if self.index < (self.total_incendio - 1) and not(self.block_index_updating):
             self.index += 1
-            print(self.index)
         return self.index
 
     @chage_index
     def anterior(self):
         if self.index > 0 and not(self.block_index_updating):
             self.index -= 1
-            print(self.index)
         return self.index
 
     @chage_index
@@ -347,10 +347,13 @@ class ControlModel(ViewControl,
                                              self.imagenes_procesamiento[self.index].ROI)
         self.imagenes_procesamiento[self.index].segmentos_coordenadas = incendio
         self.imagenes_procesamiento[self.index].foto_undistorted_segmentada = imagen
+        self.Show_frames(self.imagenes_procesamiento[self.index].foto_undistorted_segmentada,
+                         "ImagenProcesada")
         if self.area == -1:
-            self.area = CalibrateFoto.area(incendio, 
-                                           self.imagenes_procesamiento[self.index].foto_word_coordinate)
-            self.update_area(self.area)
+            self.area = self.area_foto(incendio, 
+                                       self.imagenes_procesamiento[self.index].foto_word_coordinate)
+            print("Area: ", self.area)
+            #self.update_area(self.area)
         self.block_index_updating = False
     
     def from_RGB_to_temp(self, foto_, step_sampling, foto_temp_save = False):

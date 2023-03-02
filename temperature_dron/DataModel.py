@@ -32,7 +32,7 @@ class Path():
                              "dron_dir" : "code_dron",
                              "chess_dir" : "fotos_chess_pattern",
                              "main_dir" : "temperature_dron",
-                             "fotos_spam_dir" : "fotos_analisis\\fotos_spam",}
+                             "fotos_spam_dir" : "fotos_analisis/fotos_spam",}
         self.get_actual_dir()
     """
     optener data con una key relacionada al diccionario
@@ -46,7 +46,7 @@ class Path():
         self.current_dir = self.current_dir.replace(self.name_actual_carpet,
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
-        return self.current_dir + "\\"
+        return self.current_dir + "/"
         
     def get_actual_dir(self):
         for key, value in self.carpetas_dir.items():
@@ -80,7 +80,6 @@ class IncendioData():
         self.foto_temperatura_scaled = None #foto con pixeles transformado a su respectiva temperatura
         self.segmentos_coordenadas = {}  #dictionario, parte de interes del fuego, calcular area
         self.ROI = None #recortes de interes de la imagen undistorted
-
 
 
 class Data_SQL(Path):
@@ -118,7 +117,6 @@ class Data_SQL(Path):
                              longitud[0],
                              longitud[1],
                              longitud[2])
-        print(data_longitud_row)
         self.cursor.execute("INSERT INTO COORDENADA_LATITUDE(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_latitude_row)
         self.conection.commit()
         self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitud_row)
@@ -315,4 +313,4 @@ class DatosControl(DumpPumpVariable,
                   value)
 
     def foto_spam(self):
-        return cvtColor(imread(self.go_to("fotos_spam_dir") + "spam.jpeg"), COLOR_RGB2BGR)
+        return imread(self.go_to("fotos_spam_dir") + "spam.jpeg")
