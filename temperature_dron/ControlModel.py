@@ -1,5 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
+import os
+import shutil
 from PySide6.QtWidgets import QApplication
 from ViewControl import ViewControl
 from DataModel import DatosControl, BoolData
@@ -11,6 +13,8 @@ import numpy as np
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
 import traceback
 from camera import CameraIntrisicsValue
+from jinja2 import Environment, FileSystemLoader
+import pdfkit
 
 
 
@@ -105,6 +109,7 @@ class ControlModel(ViewControl,
         self.min_expected_temp = 30
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
+
         # cargando app
         ViewControl.__init__(self)
         #datos
@@ -134,8 +139,21 @@ class ControlModel(ViewControl,
         self.timer2.start(60)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
-
-
+        # 2. Create a template Environment
+        self.env = Environment(loader=FileSystemLoader("templates/"))
+        # 3. Load the template from the Environment
+        self.template = self.env.get_template("reporte.html")
+        path_wkhtmltopdf = self.go_to("wkhtmltox_dir") + '\\bin\\wkhtmltopdf.exe'
+        self.config_wkhtmltopdf = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+        for filename in os.listdir(self.go_to("temp_dir")):
+            file_path = os.path.join(self.go_to("temp_dir"), filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
 
     def GuardarCambios_observaciones_evento(self):
         estimacion_to_save  = self.get_text_estimacion()
@@ -163,8 +181,34 @@ class ControlModel(ViewControl,
         self.manual_automatico.setear(not(self.manual_automatico.bool_value)) 
 
     def GenerarReporteBotton_detalles_evento(self):
-        pass
+        self.save_foto(self.go_to("temp_dir"), "procesada_" + str(self.imagenes_procesamiento[self.index].ID_data) + "jpeg",
+                       self.imagenes_procesamiento[self.index].foto_undistorted)
+        self.save_foto(self.go_to("temp_dir"), "cortada_" + str(self.imagenes_procesamiento[self.index].ID_data) + "jpeg",
+                       self.imagenes_procesamiento[self.index].foto_undistorted_segmentada)
+        # 4. Render the template with variables
+        current_datetime = datetime.now()
+        html = self.template.render(hora_= str(current_datetime.strftime("%m-%d-%Y")),
+                                    fecha_= str(current_datetime.strftime("%H:%M")), 
+                                    original_path = self.go_to("foto_dir")  + str(self.imagenes_procesamiento[self.index].ID_data) + "jpeg",
+                                    procesada_path = self.go_to("temp_dir") + "procesada_" + str(self.imagenes_procesamiento[self.index].ID_data) + "jpeg",
+                                    seleccion_path = self.go_to("temp_dir") + "cortada_" + str(self.imagenes_procesamiento[self.index].ID_data) + "jpeg",
+                                    ID_ = str(self.imagenes_procesamiento[self.index].ID_data),
+                                    fecha_hora_ = self.fecha +", " + self.hora,
+                                    categoria_ = str(self.categoria),
+                                    coordenadas_ = self.coordenada_url_latitude + ", " + self.coordenada_url_longitud,
+                                    area_= str(self.area),
+                                    estimacion_ = str(self.estimacion))
+
+        # 5. Write the template to an HTML file
+        with open(self.go_to("temp_dir") + 'html_report_jinja.html', 'w') as f:
+             f.write(html)
+             
+        pdfkit.from_file(self.go_to("temp_dir") + 'html_report_jinja.html',
+                         self.go_to("reportes_dir") + str(self.imagenes_procesamiento[self.index].ID_data) + "pdf",
+                         configuration = self.config_wkhtmltopdf,
+                         options={"enable-local-file-access": True})
         
+
     def load_data_show(self, index):
         self.ID_actual_sql_management["id"] = self.imagenes_procesamiento[index].ID_data
         self.fecha = self.fecha_sql()
@@ -377,3 +421,4 @@ if __name__ == "__main__":
     ejecucion = ControlModel()
     ejecucion.show()
     sys.exit(app.exec_())
+

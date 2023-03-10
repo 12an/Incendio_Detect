@@ -32,7 +32,11 @@ class Path():
                              "dron_dir" : "code_dron",
                              "chess_dir" : "fotos_chess_pattern",
                              "main_dir" : "temperature_dron",
-                             "fotos_spam_dir" : "fotos_analisis/fotos_spam",}
+                             "fotos_spam_dir" : "fotos_analisis/fotos_spam",
+                             "reportes_dir":"reportes",
+                             "wkhtmltox_dir":"wkhtmltox",
+                             "temp_dir":"cache",
+                             }
         self.get_actual_dir()
     """
     optener data con una key relacionada al diccionario
@@ -46,7 +50,7 @@ class Path():
         self.current_dir = self.current_dir.replace(self.name_actual_carpet,
                                                     self.carpetas_dir.get(key))
         self.name_actual_carpet = self.carpetas_dir.get(key)
-        return self.current_dir + "/"
+        return self.current_dir + '\\'
         
     def get_actual_dir(self):
         for key, value in self.carpetas_dir.items():
@@ -314,3 +318,6 @@ class DatosControl(DumpPumpVariable,
 
     def foto_spam(self):
         return imread(self.go_to("fotos_spam_dir") + "spam.jpeg")
+    
+    def save_foto(self, path, name, foto):
+        imwrite(path + name, foto)
