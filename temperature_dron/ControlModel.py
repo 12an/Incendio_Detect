@@ -6,16 +6,16 @@ from PySide6.QtCore import QTimer
 import numpy as np
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
 from camera import CameraIntrisicsValue
-from TransformFotos import TemperaturaMax, FiltroFotos, CalibrateFoto, Segmentacion
+from TransformFotos import FiltroFotos, CalibrateFoto, Segmentacion
 from DataModel import DatosControl, BoolData
 from ViewControl import ViewControl
-
+from Trheads import threadMaxTemperatura
 
 class ControlModel(ViewControl, 
                    DatosControl,
-                   RGBToTemperatureScale,
                    Segmentacion,
-                   CalibrateFoto):
+                   CalibrateFoto,
+                   threadMaxTemperatura):
 
     def __init__(self, *arg, **args):
         print("inicializando Controlador ")
@@ -79,7 +79,7 @@ class ControlModel(ViewControl,
         self.manual_automatico.setear(not(self.manual_automatico.bool_value)) 
 
     def GenerarReporteBotton_detalles_evento(self):
-        self.generar_reporte(coordenada_url_latitude, coordenada_url_longitud)
+        self.generar_reporte(self.coordenada_url_latitude, self.coordenada_url_longitud)
 
     def update(self, id_):
         self.search_cordenates_map(self.build_url())
@@ -100,38 +100,38 @@ class ControlModel(ViewControl,
 
     def build_url(self):
         semi_url_domain = "https://www.google.com/maps/place/"
-        coordenada_url_latitude = str(self.grados_latitude) + "°" + str(self.minutos_latitude) + "'" + str(self.segundos_latitude) + '"' + "N"
-        coordenada_url_longitud = str(self.grados_longitud) + "°" + str(self.minutos_longitud) + "'" + str(self.segundos_longitud) + '"' + "W"
-        url_from_data = semi_url_domain + coordenada_url_latitude  + "+" + coordenada_url_longitud
+        self.coordenada_url_latitude = str(self.grados_latitude) + "°" + str(self.minutos_latitude) + "'" + str(self.segundos_latitude) + '"' + "N"
+        self.coordenada_url_longitud = str(self.grados_longitud) + "°" + str(self.minutos_longitud) + "'" + str(self.segundos_longitud) + '"' + "W"
+        url_from_data = semi_url_domain + self.coordenada_url_latitude  + "+" + self.coordenada_url_longitud
         return url_from_data 
 
     def chage_index(func):
         def innner(self, *arg,**args):
             index = func(self, *arg,**args)
             self.current_id  = self.all_ids[index]
-            self.load_data(id_)
+            self.load_data(self.current_id)
             if not(isinstance(self.imagenes_procesamiento.get(self.current_id).foto_fitro, np.ndarray)):
                 _filtro = FiltroFotos(self.imagenes_procesamiento.get(self.current_id).foto_camara)
                 self.imagenes_procesamiento.get(self.current_id).foto_fitro = _filtro.foto_bilate
-                if not(isinstance(self.imagenes_procesamiento.get(id_).foto_undistorted_cut, np.ndarray)):
+                if not(isinstance(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut, np.ndarray)):
                     _undistorted, cut_undistorted, ROI = self.calibrate(self.imagenes_procesamiento[index].foto_fitro,
                                                                                  self.mtx,
                                                                                  self.dist)
-                    self.imagenes_procesamiento.get(id_).foto_undistorted_cut = cut_undistorted
-                    self.imagenes_procesamiento.get(id_).foto_undistorted = _undistorted
-                    self.imagenes_procesamiento.get(id_).ROI = ROI
+                    self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut = cut_undistorted
+                    self.imagenes_procesamiento.get(self.current_id).foto_undistorted = _undistorted
+                    self.imagenes_procesamiento.get(self.current_id).ROI = ROI
                     if isinstance(self.altura, int):
-                        word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(id_).foto_undistorted_cut,
+                        word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut,
                                                                         self.mtx,
                                                                         self.altura)
                     else:
-                        word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(id_).foto_undistorted_cut,
+                        word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut,
                                                                         self.mtx,
                                                                         59)
-                    self.imagenes_procesamiento.get(id_).foto_word_coordinate = word_image  
-                if not(isinstance(self.imagenes_procesamiento.get(id_).foto_undistorted_segmentada , np.ndarray)):
-                    self.imagen_segmentacion(self.imagenes_procesamiento.get(id_).foto_temperatura)
-                self.update(id_)
+                    self.imagenes_procesamiento.get(self.current_id).foto_word_coordinate = word_image  
+                if not(isinstance(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_segmentada , np.ndarray)):
+                    self.imagen_segmentacion(self.imagenes_procesamiento.get(self.current_id).foto_temperatura)
+                self.update(self.current_id)
                 self.anterior_index = index
         return innner
             
@@ -143,7 +143,7 @@ class ControlModel(ViewControl,
 
     @chage_index
     def anterior(self):
-        if self.index > 0 and:
+        if self.index > 0:
             self.index -= 1
         return self.index
 

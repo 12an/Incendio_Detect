@@ -1,7 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import os
 import glob
-from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
+from cv2 import imwrite, imread
 
 
 class Path():
@@ -49,21 +49,21 @@ class IncendioFolder():
         if not(isinstance(main_dir, None)):
             IncendioFolder.main_dir = main_dir 
         #creando directorios
-	if new_folder:
+        if new_folder:
             pass
 
-    def save_foto(self):
+    def save_foto(self, func):
         def inner(self, *arg,**args):
             # charging images
             foto, path, name = func(self, *arg,**args)
             imwrite(IncendioFolder.main_dir + path + name, foto)
         return inner
 
-    def open_foto(self):
+    def open_foto(self, func):
         def inner(self, *arg,**args):
             # charging images
             path, name = func(self, *arg,**args)
-             return imread(IncendioFolder.main_dir + path + name)
+            return imread(IncendioFolder.main_dir + path + name)
         return inner
 
     @save_foto
@@ -87,8 +87,7 @@ class IncendioFolder():
 
     @open_foto
     def get_temp_foto(self):
-    def save_temp_foto(self, foto):
-        return self.name_main_folder + "\\" + "raw" + "\\", "temp.jpeg"
+        pass
 
     @open_foto
     def get_analisis_foto(self):

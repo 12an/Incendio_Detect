@@ -150,8 +150,8 @@ class DatosControl(Path,
         folder.save_raw_foto(self.foto_raw_spam)
         self.folders_incendios[id_] = folder
         self.total_incendio += 1
-        self.imagenes_procesamiento.append(IncendioData(**{"foto_raw": folder.get_raw_foto(),
-                                                           "temperatura_foto": folder.get_temp_foto()
+        self.imagenes_procesamiento[id_] = (IncendioData(**{"foto_raw": folder.get_raw_foto(),
+                                                           "temperatura_foto": folder.get_temp_foto(),
                                                            "ID_data": id_
                                                             }))
     def save_instricic_camera(self):
