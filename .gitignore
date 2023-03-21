@@ -145,9 +145,10 @@ dmypy.json
 cython_debug/
 
 # carpetas
-
+cache/
 
 # archivos
+*.pdf
 *.ui.autosave
 *.pkl
 *.pyproject.user

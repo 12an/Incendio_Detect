@@ -1,9 +1,16 @@
 # This Python file uses the following encoding: utf-8
 import os
+import shutil
 import glob
 from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
 import pickle
 import sqlite3
+from datetime import datetime
+from jinja2 import Environment, FileSystemLoader
+import pdfkit
+import traceback
+from DirGestion import Path, IncendioFolder
+from DataSQL import DataSQL
 
 
 class DumpPumpVariable():
@@ -23,41 +30,6 @@ class DumpPumpVariable():
             return variable_leida
 
 
-class Path():
-    def __init__(self):
-        self.origen_dir = os.path.abspath(os.path.dirname( __name__ ))
-        self.current_dir = self.origen_dir
-        self.carpetas_dir = {"data_dir" : "data",
-                             "foto_dir" : "fotos_analisis",
-                             "dron_dir" : "code_dron",
-                             "chess_dir" : "fotos_chess_pattern",
-                             "main_dir" : "temperature_dron",
-                             "fotos_spam_dir" : "fotos_analisis/fotos_spam",
-                             "reportes_dir":"reportes",
-                             "wkhtmltox_dir":"wkhtmltox",
-                             "temp_dir":"cache",
-                             }
-        self.get_actual_dir()
-    """
-    optener data con una key relacionada al diccionario
-        self.carpetas_dir = {"data_dir" : "data",
-                             "foto_dir" : "fotos_analisis",
-                             "dron_dir" : "code_dron",
-                             "chess_dir" : "fotos_chess_pattern",
-                             "main_dir" : "temperature_dron"}
-    """
-    def go_to(self, key):
-        self.current_dir = self.current_dir.replace(self.name_actual_carpet,
-                                                    self.carpetas_dir.get(key))
-        self.name_actual_carpet = self.carpetas_dir.get(key)
-        return self.current_dir + '\\'
-        
-    def get_actual_dir(self):
-        for key, value in self.carpetas_dir.items():
-            if value in self.current_dir:
-                self.name_actual_carpet = value
-
-
 class BoolData(Path, DumpPumpVariable):
     def __init__(self, value, variable_name):
         Path.__init__(self)
@@ -70,142 +42,18 @@ class BoolData(Path, DumpPumpVariable):
 
 
 class IncendioData():
-    def __init__(self,foto_camara,
-                 ID_data,
-                 *arg,
+    def __init__(self,foto_raw,
+                 temperatura_foto,
                  **args):
-        self.ID_data = ID_data
-        self.foto_camara = foto_camara #foto original
+        self.foto_camara = foto_raw #foto original
         self.foto_fitro = None # foto con algunos filtros
         self.foto_undistorted = None # sin los efectos distorcion del lente
         self.foto_undistorted_cut = None # quitada toda la parte innecesaria para procesamiento
         self.foto_word_coordinate= None # donde se localizan cada pixel en el mundo real
         self.foto_undistorted_segmentada = None  # imagen a color del area del incendio      
-        self.foto_temperatura_scaled = None #foto con pixeles transformado a su respectiva temperatura
+        self.foto_temperatura = temperatura_foto #foto con pixeles transformado a su respectiva temperatura
         self.segmentos_coordenadas = {}  #dictionario, parte de interes del fuego, calcular area
         self.ROI = None #recortes de interes de la imagen undistorted
-
-
-class Data_SQL(Path):
-    def __init__(self):
-        Path.__init__(self)
-        self.conection = sqlite3.connect(self.go_to("data_dir") + 'Data_Incendio.db')
-        ## Creating cursor object and namimg it as cursor
-        self.cursor = self.conection.cursor()
-        self.ID_actual_sql_management = {"id":0}
-
-    def get_max_id(self):
-        self.data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
-        return self.data_row.fetchone()[0]
-         
-    def guardar_nuevo_incendio_datos(self,
-                                     fecha,
-                                     hora,
-                                     categoria,
-                                     area,
-                                     estimacion,
-                                     latitude,
-                                     longitud,
-                                     foto_normal,
-                                     altura,
-                                     **args):
-        informacion_row = (fecha, hora, categoria, area, estimacion, altura)
-        self.cursor.execute("INSERT INTO INFORMACION(FECHA, HORA, CATEGORIA, AREA, ESTIMACION, ALTURA) VALUES(?,?,?,?,?, ?)", informacion_row)
-        self.conection.commit()
-        max_id = self.get_max_id()
-        data_latitude_row = (max_id,
-                             latitude[0],
-                             latitude[1],
-                             latitude[2])
-        data_longitud_row = (max_id,
-                             longitud[0],
-                             longitud[1],
-                             longitud[2])
-        self.cursor.execute("INSERT INTO COORDENADA_LATITUDE(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_latitude_row)
-        self.conection.commit()
-        self.cursor.execute("INSERT INTO COORDENADAS_LONGITUD(ID, GRADOS, MINUTOS, SEGUNDOS) VALUES(?,?,?,?)",data_longitud_row)
-        self.conection.commit()
-        #GUARDANDO FOTO
-        imwrite(self.go_to("foto_dir") + str(max_id) + ".jpeg", foto_normal)
-
-    def update(func):
-        def inner(self, *arg, **args):
-            query, data = func(self, *arg, **args)
-            updated_data = self.ID_actual_sql_management.copy()            
-            updated_data.update(data)
-            self.cursor.execute(query, updated_data)
-            self.conection.commit()
-        return inner
-
-    def leer(func):
-        def inner(self, *arg, **args):
-            query, expected_variable = func(self, *arg, **args)
-            data_cursor = self.cursor.execute(query, self.ID_actual_sql_management)
-            if expected_variable==1:
-                return data_cursor.fetchone()[0]
-            else:
-                return data_cursor.fetchone()
-        return inner
-
-    @update
-    def update_hora(self, value):
-        return 'UPDATE  INFORMACION SET HORA=:hora WHERE ID == :id', value
-
-    @update
-    def update_fecha(self, value):
-        return 'UPDATE INFORMACION SET FECHA=:fecha WHERE ID == :id', value
-
-    @update
-    def update_latitude(self, value):
-        return 'UPDATE COORDENADA_LATITUDE SET GRADOS=:grados, MINUTOS=:minutos, SEGUNDOS=:segundos WHERE ID == :id', value
-
-    @update
-    def update_longitude(self, value):
-        return 'UPDATE COORDENADAS_LONGITUD SET GRADOS=:grados, MINUTOS=:minutos, SEGUNDOS=:segundos WHERE ID == :id', value
-
-    @update
-    def update_categoria(self, value):
-        return 'UPDATE INFORMACION SET CATEGORIA=:cateoria WHERE ID == :id', value
-
-    @update
-    def update_area(self, value):
-        return 'UPDATE INFORMACION SET AREA=:area WHERE ID == :id', value
-
-    @update
-    def update_estimacion(self, value):
-        return 'UPDATE INFORMACION SET ESTIMACION=:text WHERE ID == :id', value
-
-    @leer
-    def hora_sql(self):
-        return 'SELECT HORA FROM INFORMACION WHERE ID == :id', 1
-
-    @leer
-    def fecha_sql(self):
-        return 'SELECT FECHA FROM INFORMACION WHERE ID == :id', 1
-
-    @leer
-    def latitude_sql(self):
-        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADA_LATITUDE WHERE ID == :id', 3
-
-    @leer
-    def longitude_sql(self):
-        return 'SELECT GRADOS, MINUTOS, SEGUNDOS FROM COORDENADAs_LONGITUD WHERE ID == :id', 3
-
-    @leer
-    def categoria_sql(self):
-        return 'SELECT CATEGORIA FROM INFORMACION WHERE ID == :id', 1
-
-    @leer
-    def area_sql(self):
-        return 'SELECT AREA FROM INFORMACION WHERE ID == :id', 1
-
-    @leer
-    def estimacion_sql(self):
-        return 'SELECT ESTIMACION FROM INFORMACION WHERE ID == :id', 1
-    
-    @leer
-    def altura_sql(self):
-        return 'SELECT ALTURA FROM INFORMACION WHERE ID == :id', 1
 
 
 class FotoChesspatternData():
@@ -224,63 +72,88 @@ class CameraIntrics():
         self.tvecs = None
 
 
-class DatosControl(DumpPumpVariable,
+class DatosControl(Path,
+                   DumpPumpVariable,
                    CameraIntrics,
-                   Data_SQL):
+                   DataSQL):
     def __init__(self):
+        Path.__init__(self)
         CameraIntrics.__init__(self)
-        Data_SQL.__init__(self)
-        print("inicializando DatosControl ")
+        DataSQL.__init__(self, self.go_to("data_dir"))
+        print("inicializando DatosControl")
+        #borrar todos los archivos temporales
+        for filename in os.listdir(self.go_to("temp_dir")):
+            file_path = os.path.join(self.go_to("temp_dir"), filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
         self.imagenes_chesspattern = list()
-        self.imagenes_procesamiento = list()
+        self.imagenes_procesamiento = dict()
+        self.folders_incendios = dict()
         self.read_instricic_camera()
-        self.total_incendio = 0
         self.total_fotos_chesspattern = 0
         self.bateria_dron_porc_value = 0
         self.coordenadas_actual_dron = {}
+        self.current_id = 0
+        #para los reportes
+        #Create a template Environment
+        self.env = Environment(loader=FileSystemLoader("templates/"))
+        #Load the template from the Environment
+        self.template = self.env.get_template("reporte.html")
+        self.config_wkhtmltopdf = pdfkit.configuration(wkhtmltopdf=self.go_to("wkhtmltox_dir"))
 
-    def open_(func):
-        def inner(self, *arg,**args):
-            # charging images
-            path, tipo_imagen = func(self, *arg,**args)
-            for path_name_foto in glob.iglob(path + "\*.jpeg"):
-                #al path le quitamos el nombre del archiv0
-                name_foto = path_name_foto[len(path) : ]               
-                ID_data = name_foto[:-4]
-                imagen = imread(path_name_foto)
-                if(tipo_imagen==1):
-                    self.total_incendio += 1
-                    self.imagenes_procesamiento.append(IncendioData(*[],
-                                                                    **{"foto_camara":imagen,
-                                                                       "ID_data": ID_data
-                                                                       }))
-                if(tipo_imagen==2):
-                    self.total_fotos_chesspattern += 1
-                    self.imagenes_chesspattern.append(
-                                                      FotoChesspatternData(ID_data, imagen)
-                                                      )
-        return inner
+    def get_time():
+        current_datetime = datetime.now()
+        hora = current_datetime.strftime("%H:%M")
+        fecha = current_datetime.strftime("%m-%d-%Y")
+        return hora, fecha
 
-    @open_
-    def open_foto_analisis(self, path = False):
-        if isinstance(path, bool):
-            return self.go_to("foto_dir"), 1
-        else:
-            return path, 1
+    def cargar_datos(self):
+        for incendio, id_ in zip(self.folders_incendios, self.all_ids):
+            folder = IncendioFolder(id_, self.go_to("main_dir"))
+            self.folders_incendios[id_] = folder
+            self.imagenes_procesamiento[id_] = (IncendioData(**{"foto_raw": folder.get_raw_foto(),
+                                                            "temperatura_foto": folder.get_temp_foto()
+                                                             }))
 
-    @open_
     def open_foto_chesspattern(self, path = False):
         if isinstance(path, bool):
-            return self.go_to("chess_dir"), 2
-        else:
-            return path, 2
+            path = self.go_to("chess_dir")
+        for path_name_foto in glob.iglob(path + "\*.jpeg"):
+            #al path le quitamos el nombre del archiv0
+            name_foto = path_name_foto[len(path) : ]               
+            ID_data = name_foto[:-4]
+            imagen = imread(path_name_foto)
+            self.total_fotos_chesspattern += 1
+            self.imagenes_chesspattern.append(FotoChesspatternData(ID_data, imagen))
 
-    def get_registed_camera_instricic(self, path = False):
-        pass
-
-    def save_registed_camera_instricic(self, ):
-        pass
-
+    def guardar_nuevo_incendio(self):
+        hora, fecha = self.get_time()
+        self.read_actual_coordenates_dron()
+        latitud = self.coordenadas_actual_dron.get("latitude")
+        longitud = self.coordenadas_actual_dron.get("longitud")
+        altura = self.read_actual_altura_dron()
+        id_ = self.nuevo_incendio_datos(**{"fecha":fecha,
+                                           "hora":hora,
+                                           "categoria":0,
+                                           "area":-1,
+                                           "estimacion":"n/a",
+                                           "latitude":latitud,
+                                           "longitud":longitud,
+                                           "altura":altura})
+        folder = IncendioFolder(id_, new_folder = True)
+        folder.save_temp_foto(self.foto_temp_spam)
+        folder.save_raw_foto(self.foto_raw_spam)
+        self.folders_incendios[id_] = folder
+        self.total_incendio += 1
+        self.imagenes_procesamiento.append(IncendioData(**{"foto_raw": folder.get_raw_foto(),
+                                                           "temperatura_foto": folder.get_temp_foto()
+                                                           "ID_data": id_
+                                                            }))
     def save_instricic_camera(self):
         self.dump(self.go_to("data_dir"),
                   "registed_data_instricic",
@@ -321,3 +194,41 @@ class DatosControl(DumpPumpVariable,
     
     def save_foto(self, path, name, foto):
         imwrite(path + name, foto)
+
+    def load_data(self, id_):
+        self.ID_actual_sql_management["id"] = id_
+        self.fecha = self.fecha_sql()
+        self.hora = self.hora_sql()
+        self.categoria = self.categoria_sql()
+        self.area = self.area_sql()
+        self.estimacion = self.estimacion_sql()
+        self.altura = self.altura_sql()
+        self.grados_latitude, self.minutos_latitude, self.segundos_latitude = self.latitude_sql()
+        self.grados_longitud, self.minutos_longitud, self.segundos_longitud = self.longitude_sql()
+
+    def generar_reporte(self, coordenada_url_latitude, coordenada_url_longitud):
+        self.save_foto(self.go_to("temp_dir"), "procesada_" + str(self.current_id) + "jpeg",
+                       self.imagenes_procesamiento.get(self.current_id).foto_undistorted)
+        self.save_foto(self.go_to("temp_dir"), "cortada_" + str(self.current_id) + "jpeg",
+                       self.imagenes_procesamiento.get(self.current_id).foto_undistorted_segmentada)
+        # Render the template with variables
+        hora, fecha = self.get_time()
+        html = self.template.render(hora,
+                                    fecha, 
+                                    original_path = self.go_to("foto_dir")  + str(self.current_id) + "jpeg",
+                                    procesada_path = self.go_to("temp_dir") + "procesada_" + str(self.current_id) + "jpeg",
+                                    seleccion_path = self.go_to("temp_dir") + "cortada_" + str(self.current_id) + "jpeg",
+                                    ID_ = self.current_id,
+                                    fecha_hora_ = self.fecha +", " + self.hora,
+                                    categoria_ = str(self.categoria),
+                                    coordenadas_ = coordenada_url_latitude + ", " + coordenada_url_longitud,
+                                    area_= str(self.area),
+                                    estimacion_ = str(self.estimacion))
+
+        # Write the template to an HTML file
+        with open(self.go_to("temp_dir") + 'html_report.html', 'w') as f:
+             f.write(html)
+        pdfkit.from_file(self.go_to("temp_dir") + 'html_report.html',
+                         self.folders_incendios.get(self.current_id).path_save_reporte(),
+                         configuration = self.config_wkhtmltopdf,
+                         options={"enable-local-file-access": True})

@@ -37,14 +37,6 @@ class TemperaturaMax:
         else:
             return False
 
-class RGBToTemperatureScale:
-    def __init__(self, max_expected_temp, min_expected_temp):
-        Y_matrix = [max_expected_temp, min_expected_temp]
-        X_matrix = [[251,249], [9,0]]
-        Y_matrix = np.array(Y_matrix)
-        X_matrix = np.array(X_matrix)
-        self.regresion_model = LinearRegression().fit(X_matrix, Y_matrix)
-
 
 class CalibrateFoto():
     def calibrate(self, foto, mtx, dist):
