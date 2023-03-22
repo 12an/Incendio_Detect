@@ -15,7 +15,7 @@ class Path():
                              "main_dir" : "temperature_dron",
                              "fotos_spam_dir" : "fotos_analisis\\fotos_spam",
                              "reportes_dir":"reportes",
-                             "wkhtmltox_dir":"wkhtmltox\\bin\\wkhtmltopdf.exe",
+                             "wkhtmltox_dir":"wkhtmltox\\bin",
                              "temp_dir":"cache",
                              "incendios_dir":"Incendios_Detectados"
                              }
@@ -46,20 +46,20 @@ class IncendioFolder():
         self.ID_ = ID_
         self.name_analisis_folder = "analisis"
         self.name_reporte_folder = "reporte"
-        if not(isinstance(main_dir, None)):
+        if not(isinstance(main_dir, str)):
             IncendioFolder.main_dir = main_dir 
         #creando directorios
         if new_folder:
             pass
 
-    def save_foto(self, func):
+    def save_foto(func):
         def inner(self, *arg,**args):
             # charging images
             foto, path, name = func(self, *arg,**args)
             imwrite(IncendioFolder.main_dir + path + name, foto)
         return inner
 
-    def open_foto(self, func):
+    def open_foto(func):
         def inner(self, *arg,**args):
             # charging images
             path, name = func(self, *arg,**args)

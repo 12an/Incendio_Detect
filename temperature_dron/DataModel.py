@@ -99,12 +99,13 @@ class DatosControl(Path,
         self.bateria_dron_porc_value = 0
         self.coordenadas_actual_dron = {}
         self.current_id = 0
+        self.cargar_datos()
         #para los reportes
         #Create a template Environment
         self.env = Environment(loader=FileSystemLoader("templates/"))
         #Load the template from the Environment
         self.template = self.env.get_template("reporte.html")
-        self.config_wkhtmltopdf = pdfkit.configuration(wkhtmltopdf=self.go_to("wkhtmltox_dir"))
+        self.config_wkhtmltopdf = pdfkit.configuration(wkhtmltopdf=self.go_to("wkhtmltox_dir") + "wkhtmltopdf.exe")
 
     def get_time():
         current_datetime = datetime.now()
@@ -113,7 +114,7 @@ class DatosControl(Path,
         return hora, fecha
 
     def cargar_datos(self):
-        for incendio, id_ in zip(self.folders_incendios, self.all_ids):
+        for id_ in self.all_ids:
             folder = IncendioFolder(id_, self.go_to("main_dir"))
             self.folders_incendios[id_] = folder
             self.imagenes_procesamiento[id_] = (IncendioData(**{"foto_raw": folder.get_raw_foto(),
@@ -195,8 +196,7 @@ class DatosControl(Path,
     def save_foto(self, path, name, foto):
         imwrite(path + name, foto)
 
-    def load_data(self, id_):
-        self.ID_actual_sql_management["id"] = id_
+    def load_data(self):
         self.fecha = self.fecha_sql()
         self.hora = self.hora_sql()
         self.categoria = self.categoria_sql()

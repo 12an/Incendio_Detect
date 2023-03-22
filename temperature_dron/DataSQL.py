@@ -54,9 +54,9 @@ class DataSQL():
 
     def update(func):
         def inner(self, *arg, **args):
-            query, data = func(self, *arg, **args)           
-            updated_data.update(data)
-            self.cursor.execute(query, {"id":self.current_id})
+            query, data = func(self, *arg, **args)
+            data.update({"id":self.current_id})
+            self.cursor.execute(query, data)
             self.conection.commit()
         return inner
 

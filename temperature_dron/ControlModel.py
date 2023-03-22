@@ -109,7 +109,7 @@ class ControlModel(ViewControl,
         def innner(self, *arg,**args):
             index = func(self, *arg,**args)
             self.current_id  = self.all_ids[index]
-            self.load_data(self.current_id)
+            self.load_data()
             if not(isinstance(self.imagenes_procesamiento.get(self.current_id).foto_fitro, np.ndarray)):
                 _filtro = FiltroFotos(self.imagenes_procesamiento.get(self.current_id).foto_camara)
                 self.imagenes_procesamiento.get(self.current_id).foto_fitro = _filtro.foto_bilate
