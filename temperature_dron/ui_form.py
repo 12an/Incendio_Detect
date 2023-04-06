@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.3.2
+## Created by: Qt User Interface Compiler version 6.4.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -31,7 +31,7 @@ class Ui_MainWidget(object):
             icon = QIcon.fromTheme(iconThemeName)
         else:
             icon.addFile(u".", QSize(), QIcon.Normal, QIcon.Off)
-        
+
         MainWidget.setWindowIcon(icon)
         self.tabWidget = QTabWidget(MainWidget)
         self.tabWidget.setObjectName(u"tabWidget")
@@ -105,7 +105,7 @@ class Ui_MainWidget(object):
             icon1 = QIcon.fromTheme(iconThemeName)
         else:
             icon1.addFile(u".", QSize(), QIcon.Normal, QIcon.Off)
-        
+
         self.AnteriorCordenadaBotton_mapa.setIcon(icon1)
         self.gridLayoutWidget = QWidget(self.tab)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
@@ -118,15 +118,9 @@ class Ui_MainWidget(object):
         self.LINEA_DIVISORA.setGeometry(QRect(380, 0, 20, 571))
         self.LINEA_DIVISORA.setFrameShape(QFrame.VLine)
         self.LINEA_DIVISORA.setFrameShadow(QFrame.Sunken)
-        self.gridLayoutWidget_4 = QWidget(self.tab)
-        self.gridLayoutWidget_4.setObjectName(u"gridLayoutWidget_4")
-        self.gridLayoutWidget_4.setGeometry(QRect(10, 10, 371, 271))
-        self.mapa_2d = QGridLayout(self.gridLayoutWidget_4)
-        self.mapa_2d.setObjectName(u"mapa_2d")
-        self.mapa_2d.setContentsMargins(0, 0, 0, 0)
         self.gridLayoutWidget_5 = QWidget(self.tab)
         self.gridLayoutWidget_5.setObjectName(u"gridLayoutWidget_5")
-        self.gridLayoutWidget_5.setGeometry(QRect(10, 290, 371, 271))
+        self.gridLayoutWidget_5.setGeometry(QRect(10, 10, 371, 551))
         self.mapa_3d = QGridLayout(self.gridLayoutWidget_5)
         self.mapa_3d.setObjectName(u"mapa_3d")
         self.mapa_3d.setContentsMargins(0, 0, 0, 0)
@@ -144,7 +138,7 @@ class Ui_MainWidget(object):
         self.fechaEdit.setObjectName(u"fechaEdit")
         self.fechaEdit.setGeometry(QRect(510, 150, 101, 31))
         self.fechaEdit.setAlignment(Qt.AlignCenter)
-        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2026, 1, 6), QTime(23, 59, 59)))
+        self.fechaEdit.setMaximumDateTime(QDateTime(QDate(2026, 1, 7), QTime(23, 59, 59)))
         self.fechaEdit.setMinimumDateTime(QDateTime(QDate(2000, 9, 14), QTime(0, 0, 0)))
         self.GuardarCambios = QPushButton(self.Editar)
         self.GuardarCambios.setObjectName(u"GuardarCambios")
@@ -286,7 +280,7 @@ class Ui_MainWidget(object):
 
         self.retranslateUi(MainWidget)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWidget)

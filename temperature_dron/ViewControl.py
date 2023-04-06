@@ -22,9 +22,30 @@ from matplotlib.figure import Figure
 
 
 class MplCanvas(FigureCanvas):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self,
+                 x_puntos,
+                 y_puntos,
+                 x_foco,
+                 y_foco,
+                 altura,
+                 parent=None,
+                 width=369,
+                 height=549, 
+                 dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111, projection='3d')
+        self.x_puntos = x_puntos
+        self.y_puntos = y_puntos
+        self.x_foco = x_foco
+        self.y_foco = y_foco
+        self.altura = altura
+        self.axes = fig.add_subplot(projection='3d')
+        self.axes.plot(self.x_puntos, self.y_puntos, zs=0, zdir='z', label='Puntos observados')
+        self.axes.scatter(self.x_foco, self.y_foco, zs=self.altura, zdir='y',c='#Efb810', label='Centro Focal Camara')
+        # Make legend, set axes limits and labels
+        self.axes.legend()
+        self.axes.set_xlim(min(self.x_puntos) + 5, max(self.x_puntos) + 5)
+        self.axes.set_ylim(min(self.y_puntos) + 5, max(self.y_puntos) + 5)
+        self.axes.set_zlim(0, self.altura + 5)
         self.axes.set_xlabel('X Label')
         self.axes.set_ylabel('Y Label')
         self.axes.set_zlabel('Z Label')
@@ -77,13 +98,6 @@ class ViewControl(Widget):
                                   "ImagenProcesada":(self.fotos[1], [381, 248]),
                                   "Foto_calibracion_antes":(self.fotos[2], [441, 501]),
                                   "Foto_calibracion_despues":(self.fotos[3], [441, 501])}
-        #plot para 3d puntos
-        '''self.local_3d_word_plot = MplCanvas(self, width=5, height=4, dpi=100)
-        self.plot_size_view = {"local_3d_word_plot":self.local_3d_word_plot
-            }
-        self.ui.mapa_3d.addWidget(self.local_3d_word_plot,
-                                  1,
-                                  1)  '''     
 
     def Show_frames(self, frame, foto_name):
         """
@@ -162,11 +176,10 @@ class ViewControl(Widget):
     def get_text_estimacion(self):
         return self.ui.textEdit.toPlainText()
 
-    def show_plot_3d(self, x, y, z, layout):
-        '''plot_object = self.plot_size_view.get(layout)
-        plot_object.axes.scatter(x, y, z)'''
-        pass
-
+    def show_plot_3d(self,canvas):
+        self.ui.mapa_3d.addWidget(canvas,
+                                  1,
+                                  1)
 
     def siguiente(self):
         pass

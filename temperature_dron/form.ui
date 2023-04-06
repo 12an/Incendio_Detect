@@ -30,7 +30,7 @@
     <enum>QTabWidget::Triangular</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <property name="elideMode">
     <enum>Qt::ElideMiddle</enum>
@@ -282,24 +282,13 @@
       <enum>Qt::Vertical</enum>
      </property>
     </widget>
-    <widget class="QWidget" name="gridLayoutWidget_4">
+    <widget class="QWidget" name="gridLayoutWidget_5">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>10</y>
        <width>371</width>
-       <height>271</height>
-      </rect>
-     </property>
-     <layout class="QGridLayout" name="mapa_2d"/>
-    </widget>
-    <widget class="QWidget" name="gridLayoutWidget_5">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>290</y>
-       <width>371</width>
-       <height>271</height>
+       <height>551</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="mapa_3d"/>
@@ -351,7 +340,7 @@
        <second>59</second>
        <year>2026</year>
        <month>1</month>
-       <day>6</day>
+       <day>8</day>
       </datetime>
      </property>
      <property name="minimumDateTime">

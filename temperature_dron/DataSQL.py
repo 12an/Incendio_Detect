@@ -16,11 +16,11 @@ class DataSQL():
 
     def get_max_id(self):
         data_row = self.cursor.execute('SELECT max(ID) FROM INFORMACION')
-        return data_row.fetchone()[0]
+        return data_row.fetchone()
 
     def get_all_ids(self):
-        data_row = self.cursor.execute('SELECT ID FROM INFORMACION')
-        return data_row.fetchone()
+        data_row = self.cursor.execute('SELECT ID FROM INFORMACION')       
+        return [row[0] for row in data_row.fetchall()]
          
     def nuevo_incendio_datos(self,
                              fecha,

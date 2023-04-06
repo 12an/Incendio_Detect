@@ -1,15 +1,17 @@
 # This Python file uses the following encoding: utf-8
 import sys
-import os
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer
 import numpy as np
-from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
+from PySide6.QtCore import QThreadPool
 from camera import CameraIntrisicsValue
 from TransformFotos import FiltroFotos, CalibrateFoto, Segmentacion
 from DataModel import DatosControl, BoolData
-from ViewControl import ViewControl
+from ViewControl import ViewControl, MplCanvas
 from Trheads import threadMaxTemperatura
+
+
+
 
 class ControlModel(ViewControl, 
                    DatosControl,
@@ -27,7 +29,7 @@ class ControlModel(ViewControl,
         self.index_fotos_calibracion = 0
         self.click_siguiente_chesspatern = 0
         # temperaturas utiles para la segmentacion
-        self.temp_incendio = 50
+        self.temp_incendio = 45
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
         # cargando app
@@ -95,8 +97,21 @@ class ControlModel(ViewControl,
                          "Foto_Camara")
         self.Show_frames(self.imagenes_procesamiento.get(id_).foto_undistorted_segmentada,
                          "ImagenProcesada")
-        x, y, z = self.plot_3d(self.imagenes_procesamiento.get(id_).segmentos_coordenadas,
-                               self.imagenes_procesamiento.get(id_).foto_word_coordinate)      
+        
+        x, y, z_ = self.plot_3d(self.imagenes_procesamiento.get(id_).segmentos_coordenadas,
+                                self.imagenes_procesamiento.get(id_).foto_word_coordinate)
+        w_x, w_y, _ = self.imagenes_procesamiento.get(self.current_id).foto_fitro.shape
+        principal_point_x, principal_point_y = self.point_to_3d(w_x/2,
+                                                                w_y/2,
+                                                                self.altura,
+                                                                self.mtx)
+        z = int(self.altura)
+        histograma_plot = MplCanvas(x,
+                                    y,
+                                    principal_point_x,
+                                    principal_point_y,
+                                    z)
+        self.show_plot_3d(histograma_plot)
 
     def build_url(self):
         semi_url_domain = "https://www.google.com/maps/place/"
@@ -114,25 +129,26 @@ class ControlModel(ViewControl,
                 _filtro = FiltroFotos(self.imagenes_procesamiento.get(self.current_id).foto_camara)
                 self.imagenes_procesamiento.get(self.current_id).foto_fitro = _filtro.foto_bilate
                 if not(isinstance(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut, np.ndarray)):
-                    _undistorted, cut_undistorted, ROI = self.calibrate(self.imagenes_procesamiento[index].foto_fitro,
+                    
+                    _undistorted, cut_undistorted, ROI = self.calibrate(self.imagenes_procesamiento.get(self.current_id).foto_fitro,
+                                                                                 self.mtx,
+                                                                                 self.dist,
+                                                                                 True)
+                    temp_undistorted, cut_undistorted_temp, _ = self.calibrate(self.imagenes_procesamiento.get(self.current_id).foto_temperatura ,
                                                                                  self.mtx,
                                                                                  self.dist)
+                    self.imagenes_procesamiento.get(self.current_id).foto_temperatura_undistorted = temp_undistorted
+                    self.imagenes_procesamiento.get(self.current_id).foto_temperatura_undistorted_cut = cut_undistorted_temp
                     self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut = cut_undistorted
                     self.imagenes_procesamiento.get(self.current_id).foto_undistorted = _undistorted
                     self.imagenes_procesamiento.get(self.current_id).ROI = ROI
-                    if isinstance(self.altura, int):
-                        word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut,
+                    word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut,
                                                                         self.mtx,
-                                                                        self.altura)
-                    else:
-                        word_image = self.get_foto_3d_from_2d(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_cut,
-                                                                        self.mtx,
-                                                                        59)
+                                                                        int(self.altura))
                     self.imagenes_procesamiento.get(self.current_id).foto_word_coordinate = word_image  
                 if not(isinstance(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_segmentada , np.ndarray)):
                     self.imagen_segmentacion(self.imagenes_procesamiento.get(self.current_id).foto_temperatura)
-                self.update(self.current_id)
-                self.anterior_index = index
+            self.update(self.current_id)
         return innner
             
     @chage_index
@@ -216,14 +232,14 @@ class ControlModel(ViewControl,
         self.block_thread_finished = False
 
     def imagen_segmentacion(self, foto_temperatura):
-        incendio, imagen = self.segmentacion(self.imagenes_procesamiento[self.index].foto_temperatura_scaled,
-                                             self.imagenes_procesamiento[self.index].foto_undistorted,
-                                             self.imagenes_procesamiento[self.index].ROI)
-        self.imagenes_procesamiento[self.index].segmentos_coordenadas = incendio
-        self.imagenes_procesamiento[self.index].foto_undistorted_segmentada = imagen
+        incendio, imagen = self.segmentacion(self.imagenes_procesamiento.get(self.current_id).foto_temperatura_undistorted_cut,
+                                             self.imagenes_procesamiento.get(self.current_id).foto_undistorted,
+                                             self.imagenes_procesamiento.get(self.current_id).ROI)
+        self.imagenes_procesamiento.get(self.current_id).segmentos_coordenadas = incendio
+        self.imagenes_procesamiento.get(self.current_id).foto_undistorted_segmentada = imagen
         if self.area == -1:
             self.area = self.area_foto(incendio, 
-                                       self.imagenes_procesamiento[self.index].foto_word_coordinate)
+                                       self.imagenes_procesamiento.get(self.current_id).foto_word_coordinate)
             print("Area: ", self.area)
             #self.update_area(self.area)
        

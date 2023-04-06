@@ -39,7 +39,7 @@ class TemperaturaMax:
 
 
 class CalibrateFoto():
-    def calibrate(self, foto, mtx, dist):
+    def calibrate(self, foto, mtx, dist, drawing = False):
         cameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx,
                                                           dist,
                                                           (foto.shape[1], foto.shape[0] ),
@@ -47,20 +47,31 @@ class CalibrateFoto():
                                                           (foto.shape[1] , foto.shape[0]))
         mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, cameramtx, (foto.shape[1], foto.shape[0]), 5)
         foto_calibrada = cv2.remap(foto, mapx, mapy, cv2.INTER_LINEAR)
+        #cv2.imshow("calibrada cortada,", foto_calibrada_recortada)
         foto_calibrada_cuadrado = np.copy(foto_calibrada, order = "K", subok = True)
         # crop the image
         x, y, w, h = roi
         foto_calibrada_recortada = np.copy(foto_calibrada[y:y+h, x:x+w], order = "K", subok = True)
         # dibujando cuadrado en la imagen calibrada del area de interes
-        for j in range(x, x + w):
-            for doble_linea in range(0, 1):
-                foto_calibrada_cuadrado[y + doble_linea, j] = [239,184,16]
-                foto_calibrada_cuadrado[y + h + doble_linea, j] = [239,184,16]
-        for i in range(y, y + h):
-            for doble_linea in range(0, 1):
-                foto_calibrada_cuadrado[i, x + doble_linea] = [239,184,16]
-                foto_calibrada_cuadrado[i, x + w + doble_linea] = [239,184,16]
+        if drawing:
+            for j in range(x, x + w):
+                for doble_linea in range(0, 1):
+                    foto_calibrada_cuadrado[y + doble_linea, j] = [239,184,16]
+                    foto_calibrada_cuadrado[y + h + doble_linea, j] = [239,184,16]
+            for i in range(y, y + h):
+                for doble_linea in range(0, 1):
+                    foto_calibrada_cuadrado[i, x + doble_linea] = [239,184,16]
+                    foto_calibrada_cuadrado[i, x + w + doble_linea] = [239,184,16]
         return foto_calibrada, foto_calibrada_recortada, roi
+
+    def point_to_3d(self, i, j, Zw, cameramtx):
+        fx = cameramtx[0,0]
+        fy = cameramtx[1,1]
+        cx = cameramtx[2,0]
+        cy = cameramtx[2,1]
+        xw = ((i - cx)/fx)*Zw
+        yw = ((j - cy)/fy)*Zw
+        return xw, yw
 
     def get_foto_3d_from_2d(self, ft, cameramtx, altura):
         # z es constante a la altura de la imagen
@@ -68,15 +79,9 @@ class CalibrateFoto():
         foto = np.zeros_like(ft, dtype = None, order = "K", subok = True)
         foto = foto.astype('float64')
         cameramtrix = np.copy(cameramtx, order = "K", subok = True)
-        cameramtrix = cameramtrix
-        fx = cameramtrix[0,0]
-        fy = cameramtrix[1,1]
-        cx = cameramtrix[2,0]
-        cy = cameramtrix[2,1]
         for i in range(0,ft.shape[0]):
             for j in range(0,ft.shape[1]):
-                xw = ((i - cx)/fx)*Zw
-                yw = ((j - cy)/fy)*Zw
+                xw, yw = self.point_to_3d(i, j, Zw, cameramtrix)
                 foto[i, j] =[xw, yw, Zw]
         return foto
 
@@ -120,12 +125,16 @@ class CalibrateFoto():
         return mt.sqrt(mt.fabs((s * (s - a) * (s - b) * (s - c))))
 
     def plot_3d(self, puntos_interes, foto_word_view):
-        foto_3d_view = np.copy(foto_word_view, order = "K", subok = True)         
+        foto_3d_view = np.copy(foto_word_view, order = "K", subok = True)   
+        X = list()
+        Y = list()
+        Z = list()
         for punto in puntos_interes:
-            x = foto_3d_view[punto[0], punto[1]][0]
-            y = foto_3d_view[punto[0], punto[1]][1]
-            z = foto_3d_view[punto[0], punto[1]][2]
-        return x, y, z 
+            x, y, z = foto_3d_view[punto[0], punto[1]]
+            X.append(x)
+            Y.append(y)
+            Z.append(z)
+        return X, Y, Z
 
 class Segmentacion():
     def __init__(self,
@@ -141,15 +150,11 @@ class Segmentacion():
                      ROI):
         x, y, w, h = ROI
         foto_undistorted_c = np.zeros_like(foto_undistorted, order = "K", subok = True)        
-        incendio = []
+        incendio = list()
         #redrwing picture
         for i in range(0, foto_temperatura_scalada.shape[0]):
             for j in range(0, foto_temperatura_scalada.shape[1]):
                 if foto_temperatura_scalada[i,j]>= (self.temp_incendio):
                     incendio.append([i, j])
-                    foto_undistorted_c[y + i, j + x] = foto_undistorted[y + i, j + x]
+                    foto_undistorted_c[y + i, j + x] = foto_undistorted[y + i, j + x]                   
         return incendio, foto_undistorted_c
-
-
-
-                

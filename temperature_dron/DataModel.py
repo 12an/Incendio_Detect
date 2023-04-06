@@ -1,33 +1,13 @@
 # This Python file uses the following encoding: utf-8
 import os
-import shutil
 import glob
 from cv2 import imwrite, imread, cvtColor, COLOR_RGB2BGR
-import pickle
-import sqlite3
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 import pdfkit
 import traceback
-from DirGestion import Path, IncendioFolder
+from DirGestion import Path, IncendioFolder, DumpPumpVariable
 from DataSQL import DataSQL
-
-
-class DumpPumpVariable():
-    def dump(self, directorio, variable_name, variable):
-        with open(directorio + variable_name + ".pkl" , "wb") as saving:
-            pickle.dump(variable, saving)
-    def pump(self, directorio, variable_name):
-        with open(directorio + variable_name + ".pkl", "rb") as reading:
-            variable_leida = 0
-            try:
-                variable_leida = pickle.load(reading)
-            except EOFError as nothing_in_file:
-                print("there is nothing in the file, of data:")
-                print(nothing_in_file)
-            except FileNotFoundError:
-                print("archivo no existe")
-            return variable_leida
 
 
 class BoolData(Path, DumpPumpVariable):
@@ -52,6 +32,8 @@ class IncendioData():
         self.foto_word_coordinate= None # donde se localizan cada pixel en el mundo real
         self.foto_undistorted_segmentada = None  # imagen a color del area del incendio      
         self.foto_temperatura = temperatura_foto #foto con pixeles transformado a su respectiva temperatura
+        self.foto_temperatura_undistorted = None
+        self.foto_temperatura_undistorted_cut = None
         self.segmentos_coordenadas = {}  #dictionario, parte de interes del fuego, calcular area
         self.ROI = None #recortes de interes de la imagen undistorted
 
@@ -81,16 +63,6 @@ class DatosControl(Path,
         CameraIntrics.__init__(self)
         DataSQL.__init__(self, self.go_to("data_dir"))
         print("inicializando DatosControl")
-        #borrar todos los archivos temporales
-        for filename in os.listdir(self.go_to("temp_dir")):
-            file_path = os.path.join(self.go_to("temp_dir"), filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except Exception as e:
-                print('Failed to delete %s. Reason: %s' % (file_path, e))
         self.imagenes_chesspattern = list()
         self.imagenes_procesamiento = dict()
         self.folders_incendios = dict()
@@ -106,8 +78,9 @@ class DatosControl(Path,
         #Load the template from the Environment
         self.template = self.env.get_template("reporte.html")
         self.config_wkhtmltopdf = pdfkit.configuration(wkhtmltopdf=self.go_to("wkhtmltox_dir") + "wkhtmltopdf.exe")
+        self.open_foto_chesspattern()
 
-    def get_time():
+    def get_time(self):
         current_datetime = datetime.now()
         hora = current_datetime.strftime("%H:%M")
         fecha = current_datetime.strftime("%m-%d-%Y")
@@ -115,15 +88,14 @@ class DatosControl(Path,
 
     def cargar_datos(self):
         for id_ in self.all_ids:
-            folder = IncendioFolder(id_, self.go_to("main_dir"))
+            folder = IncendioFolder(id_, self.go_to("incendios_dir"))
             self.folders_incendios[id_] = folder
             self.imagenes_procesamiento[id_] = (IncendioData(**{"foto_raw": folder.get_raw_foto(),
                                                             "temperatura_foto": folder.get_temp_foto()
                                                              }))
 
-    def open_foto_chesspattern(self, path = False):
-        if isinstance(path, bool):
-            path = self.go_to("chess_dir")
+    def open_foto_chesspattern(self):
+        path = self.go_to("chess_dir")
         for path_name_foto in glob.iglob(path + "\*.jpeg"):
             #al path le quitamos el nombre del archiv0
             name_foto = path_name_foto[len(path) : ]               
@@ -164,7 +136,6 @@ class DatosControl(Path,
         packet = self.pump(self.go_to("data_dir"), "registed_data_instricic")
         try:
             self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = packet
-            print(self.mtx)
         except ValueError as nothing_in_file:
             print("parece que no se ha guardado")
             print(nothing_in_file)
@@ -207,17 +178,17 @@ class DatosControl(Path,
         self.grados_longitud, self.minutos_longitud, self.segundos_longitud = self.longitude_sql()
 
     def generar_reporte(self, coordenada_url_latitude, coordenada_url_longitud):
-        self.save_foto(self.go_to("temp_dir"), "procesada_" + str(self.current_id) + "jpeg",
-                       self.imagenes_procesamiento.get(self.current_id).foto_undistorted)
-        self.save_foto(self.go_to("temp_dir"), "cortada_" + str(self.current_id) + "jpeg",
-                       self.imagenes_procesamiento.get(self.current_id).foto_undistorted_segmentada)
+        self.folders_incendios.get(self.current_id).save_foto_temporal_dir(self.imagenes_procesamiento.get(self.current_id).foto_undistorted_segmentada,
+                                                                           "cortada")
+        self.folders_incendios.get(self.current_id).save_foto_temporal_dir(self.imagenes_procesamiento.get(self.current_id).foto_undistorted,
+                                                                           "procesada")
         # Render the template with variables
         hora, fecha = self.get_time()
-        html = self.template.render(hora,
-                                    fecha, 
-                                    original_path = self.go_to("foto_dir")  + str(self.current_id) + "jpeg",
-                                    procesada_path = self.go_to("temp_dir") + "procesada_" + str(self.current_id) + "jpeg",
-                                    seleccion_path = self.go_to("temp_dir") + "cortada_" + str(self.current_id) + "jpeg",
+        file_html = self.template.render(hora_ = hora,
+                                    fecha_ = fecha,
+                                    original_path = self.folders_incendios.get(self.current_id).path_root + "\\raw\\raw.jpeg",
+                                    procesada_path = self.folders_incendios.get(self.current_id).path_temporal_folder + "procesada.jpeg",
+                                    seleccion_path = self.folders_incendios.get(self.current_id).path_temporal_folder + "cortada.jpeg",
                                     ID_ = self.current_id,
                                     fecha_hora_ = self.fecha +", " + self.hora,
                                     categoria_ = str(self.categoria),
@@ -226,9 +197,9 @@ class DatosControl(Path,
                                     estimacion_ = str(self.estimacion))
 
         # Write the template to an HTML file
-        with open(self.go_to("temp_dir") + 'html_report.html', 'w') as f:
-             f.write(html)
-        pdfkit.from_file(self.go_to("temp_dir") + 'html_report.html',
+        with open(self.folders_incendios.get(self.current_id).path_temporal_folder + 'html_report.html', 'w') as f:
+             f.write(file_html)
+        pdfkit.from_file(self.folders_incendios.get(self.current_id).path_temporal_folder + 'html_report.html',
                          self.folders_incendios.get(self.current_id).path_save_reporte(),
                          configuration = self.config_wkhtmltopdf,
                          options={"enable-local-file-access": True})
