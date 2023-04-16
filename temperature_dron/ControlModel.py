@@ -9,8 +9,8 @@ from TransformFotos import FiltroFotos, CalibrateFoto, Segmentacion
 from DataModel import DatosControl, BoolData
 from ViewControl import ViewControl, MplCanvas
 from Trheads import threadMaxTemperatura
-
-
+from Handlers import CameraTCPHandler, InfoTCPHandler, SendComandSocket
+from socketserver  import TCPServer
 
 
 class ControlModel(ViewControl, 
@@ -32,6 +32,21 @@ class ControlModel(ViewControl,
         self.temp_incendio = 45
         self.block_thread_finished = False
         self.threadpool = QThreadPool()
+        # configuracion de comunicaciones tcp ip
+        self.camera_host = "localhost"
+        self.camera_port = 1046
+        self.comand_host = "localhost"
+        self.comand_port = self.camera_port + 1
+        self.info_host = "localhost"
+        self.info_port = self.camera_port + 2
+        self.server_camara = TCPServer((self.camera_host, self.camera_port),
+                                      CameraTCPHandler)
+        self.server_info = TCPServer((self.info_host, self.info_port),
+                                    InfoTCPHandler)
+        try:
+            self.comandos_send = SendComandSocket(self.comand_host, self.comand_port)
+        except:
+            self.comandos_send = False
         # cargando app
         ViewControl.__init__(self)
         #datos
@@ -48,9 +63,9 @@ class ControlModel(ViewControl,
         self.timer = QTimer()
         self.timer.timeout.connect(self.cargar_datos_dron)
         self.timer.start(2)#segundos
-        # creando timer recurrente leer y procesar fotos
+        # creando timer recurrente para leer el streaming fotos
         self.timer2 = QTimer()
-        self.timer2.timeout.connect(self.nueva_mision_dron_app)
+        self.timer2.timeout.connect(self.streaming_camera)
         self.timer2.start(60)#segundos
         #iniciando desde el indixe 0 en los datos
         self.static_index()
@@ -68,17 +83,31 @@ class ControlModel(ViewControl,
         self.update_fecha_show(self.fecha)
         self.update_hora_show(self.hora)
 
+    def send_comand(self):
+        if isinstance(self.comandos_send, bool()):
+            try:
+                self.comandos_send = SendComandSocket(self.comand_host, self.comand_port)
+            except:
+                self.comandos_send = False
+                print("coneccion no establecida con el servidor de los comandos")
+        else:
+            self.comandos_send.send_data(self.comandos_dron)
+
     def ArmDisarmButton_dron_evento(self):
-        self.arm_disarm.setear(not(self.arm_disarm.bool_value)) 
+       self.comandos_dron["arm_disarm"] = not(self.comandos_dron.get("arm_disarm"))
+       self.send_comand()
         
     def StartMisionButton_dron_evento(self):
-        self.start_mision.setear(not(self.start_mision.bool_value)) 
+        self.comandos_dron["start_mision"] = not(self.comandos_dron.get("start_mision"))
+        self.send_comand()
 
     def RTLButton_dron_evento(self):
-        self.rtl.setear(not(self.rtl.bool_value)) 
+        self.comandos_dron["rtl"] = not(self.comandos_dron.get("rtl"))
+        self.send_comand()
 
     def ManualAutoButton_dron_evento(self):
-        self.manual_automatico.setear(not(self.manual_automatico.bool_value)) 
+        self.comandos_dron["manual_auto"] = not(self.comandos_dron.get("manual_auto"))
+        self.send_comand()
 
     def GenerarReporteBotton_detalles_evento(self):
         self.generar_reporte(self.coordenada_url_latitude, self.coordenada_url_longitud)
@@ -169,20 +198,28 @@ class ControlModel(ViewControl,
         return self.index
 
     def cargar_datos_dron(self):
-        self.read_actual_coordenates_dron()
-        self.read_battery_dron()
+        self.server_info.handle_request()
+        self.coordenadas_actual_dron = self.server_info.RequestHandlerClass.coordenadas
+        self.altura_actual_dron = self.server_info.RequestHandlerClass.altura
+        self.bateria_dron = self.server_info.RequestHandlerClass.porcentage_bateria
         latitud = self.coordenadas_actual_dron.get("latitude")
         longitud = self.coordenadas_actual_dron.get("longitud")
         latitud_text = str(latitud[0]) + "°"  + str(latitud[1]) + "'" + str(latitud[2]) + '" N'
         longitud_text = str(longitud[0]) + "°"  + str(longitud[1]) + "'" + str(longitud[2]) + '" W'
         self.update_text_labels_dron(**{"coord_actual_dron":latitud_text + ", " + longitud_text,
-                                        "porc_bat":self.bateria_dron_porc_value})
+                                        "porc_bat":self.bateria_dron})
 
-    def nueva_mision_dron_app(self):
-        if(self.status_mision() and not(self.block_thread_finished)):
-            self.foto_temp_spam = self.foto_spam()
-            self.from_RGB_to_temp(self.foto_temp_spam, 2)
-            self.block_thread_finished = True
+    def streaming_camera(self):
+        self.server_camara.handle_request()
+        imagen = self.server_camara.RequestHandlerClass.imagen
+        temp_imagen = self.server_camara.RequestHandlerClass.temperatura
+        imagen = np.asarray(imagen)
+        imagen = np.dstack([imagen, imagen, imagen])
+        self.Show_frames(imagen,
+                         "streming_camera")
+        if(self.comandos_dron.get("start_mision")):
+            temp_imagen = np.asarray(temp_imagen)
+            self.is_max_trigger_foto(temp_imagen)
 
     def chage_index_chesspatern(func):
         def innner(self, *arg,**args):
@@ -240,7 +277,6 @@ class ControlModel(ViewControl,
         if self.area == -1:
             self.area = self.area_foto(incendio, 
                                        self.imagenes_procesamiento.get(self.current_id).foto_word_coordinate)
-            print("Area: ", self.area)
             #self.update_area(self.area)
        
     def is_max_trigger_foto(self, foto_temperatura):

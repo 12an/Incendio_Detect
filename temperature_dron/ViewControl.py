@@ -73,7 +73,7 @@ class ViewControl(Widget):
         self.ui.tabWidget.blockSignals(False) #now listen the currentChanged signal
         # imagen tab 3 detalles
         self.fotos = list()
-        for obj in range(0,4):
+        for obj in range(0,5):
             temp = QLabel()
             self.fotos.append(temp)
         self.ui.Foto_Camara.addWidget(self.fotos[0],
@@ -88,6 +88,9 @@ class ViewControl(Widget):
         self.ui.Foto_calibracion_despues.addWidget(self.fotos[3],
                                           1,
                                           1)
+        self.ui.Straming_Camera.addWidget(self.fotos[4],
+                                          1,
+                                          1)
         #mapa
         self.web_view = QWebEngineView()
         self.web_view.settings()
@@ -97,7 +100,8 @@ class ViewControl(Widget):
         self.size_imaenes_view = {"Foto_Camara":(self.fotos[0], [381, 248]), 
                                   "ImagenProcesada":(self.fotos[1], [381, 248]),
                                   "Foto_calibracion_antes":(self.fotos[2], [441, 501]),
-                                  "Foto_calibracion_despues":(self.fotos[3], [441, 501])}
+                                  "Foto_calibracion_despues":(self.fotos[3], [441, 501]),
+                                  "streming_camera":(self.fotos[4], [499, 409]),}
 
     def Show_frames(self, frame, foto_name):
         """

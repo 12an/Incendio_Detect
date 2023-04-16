@@ -68,8 +68,13 @@ class DatosControl(Path,
         self.folders_incendios = dict()
         self.read_instricic_camera()
         self.total_fotos_chesspattern = 0
-        self.bateria_dron_porc_value = 0
+        self.altura_actual_dron = 0
+        self.bateria_dron = 0
         self.coordenadas_actual_dron = {}
+        self.comandos_dron = {"arm_disarm":False,
+                              "start_mision":False,
+                              "rtl":False,
+                              "manual_auto":False}
         self.current_id = 0
         self.cargar_datos()
         #para los reportes
@@ -106,10 +111,9 @@ class DatosControl(Path,
 
     def guardar_nuevo_incendio(self):
         hora, fecha = self.get_time()
-        self.read_actual_coordenates_dron()
         latitud = self.coordenadas_actual_dron.get("latitude")
         longitud = self.coordenadas_actual_dron.get("longitud")
-        altura = self.read_actual_altura_dron()
+        altura = self.altura_actual_dron
         id_ = self.nuevo_incendio_datos(**{"fecha":fecha,
                                            "hora":hora,
                                            "categoria":0,
@@ -140,30 +144,6 @@ class DatosControl(Path,
             print("parece que no se ha guardado")
             print(nothing_in_file)
 
-    def read_battery_dron(self):
-        self.bateria_dron_porc_value = self.pump(self.go_to("data_dir"), "bateria_data_dron")
-        return self.bateria_dron_porc_value
-
-    def read_actual_coordenates_dron(self):
-        self.coordenadas_actual_dron = self.pump(self.go_to("data_dir"), "coordenadas_dron")
-        return self.coordenadas_actual_dron
-    
-    def read_actual_altura_dron(self):
-        self.altura_actual_dron = self.pump(self.go_to("data_dir"), "altura_dron")
-        return self.altura_actual_dron
-
-    def status_mision(self):
-        self.mision_status = self.pump(self.go_to("data_dir"), "mision_status")
-        return self.mision_status
-
-    def write_status_mision(self, value):
-        self.dump(self.go_to("data_dir"),
-                  "mision_status",
-                  value)
-
-    def foto_spam(self):
-        return imread(self.go_to("fotos_spam_dir") + "spam.jpeg")
-    
     def save_foto(self, path, name, foto):
         imwrite(path + name, foto)
 

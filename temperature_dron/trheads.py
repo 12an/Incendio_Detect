@@ -2,6 +2,7 @@
 from TransformFotos import TemperaturaMax
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThreadPool
 import traceback
+import sys
 
 
 class WorkerSignals(QObject):
@@ -32,7 +33,7 @@ class threadMaxTemperatura(QRunnable, TemperaturaMax):
         self.signals = WorkerSignals()
         self.foto_temperatura = foto_temperatura
 
-    @Slot()    
+    @Slot()
     def run(self):
         try:
            triger = self.is_max_trigger_foto(self.foto_temperatura)

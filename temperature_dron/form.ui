@@ -30,7 +30,7 @@
     <enum>QTabWidget::Triangular</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <property name="elideMode">
     <enum>Qt::ElideMiddle</enum>
@@ -43,7 +43,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>60</y>
+       <y>20</y>
        <width>141</width>
        <height>16</height>
       </rect>
@@ -62,7 +62,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>80</y>
+       <y>40</y>
        <width>151</width>
        <height>20</height>
       </rect>
@@ -78,7 +78,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>70</y>
+       <y>30</y>
        <width>131</width>
        <height>20</height>
       </rect>
@@ -91,7 +91,7 @@
      <property name="geometry">
       <rect>
        <x>740</x>
-       <y>70</y>
+       <y>30</y>
        <width>141</width>
        <height>16</height>
       </rect>
@@ -104,7 +104,7 @@
      <property name="geometry">
       <rect>
        <x>738</x>
-       <y>80</y>
+       <y>40</y>
        <width>141</width>
        <height>20</height>
       </rect>
@@ -120,7 +120,7 @@
      <property name="geometry">
       <rect>
        <x>740</x>
-       <y>60</y>
+       <y>20</y>
        <width>151</width>
        <height>20</height>
       </rect>
@@ -139,7 +139,7 @@
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>320</y>
+       <y>460</y>
        <width>721</width>
        <height>41</height>
       </rect>
@@ -158,7 +158,7 @@
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>370</y>
+       <y>510</y>
        <width>221</width>
        <height>41</height>
       </rect>
@@ -177,7 +177,7 @@
      <property name="geometry">
       <rect>
        <x>340</x>
-       <y>370</y>
+       <y>510</y>
        <width>181</width>
        <height>41</height>
       </rect>
@@ -196,7 +196,7 @@
      <property name="geometry">
       <rect>
        <x>550</x>
-       <y>370</y>
+       <y>510</y>
        <width>251</width>
        <height>41</height>
       </rect>
@@ -210,6 +210,21 @@
      <property name="text">
       <string>Manual/Auto</string>
      </property>
+    </widget>
+    <widget class="QWidget" name="gridLayoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>30</y>
+       <width>501</width>
+       <height>411</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="Straming_Camera">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetFixedSize</enum>
+      </property>
+     </layout>
     </widget>
    </widget>
    <widget class="QWidget" name="tab">
@@ -340,7 +355,7 @@
        <second>59</second>
        <year>2026</year>
        <month>1</month>
-       <day>8</day>
+       <day>9</day>
       </datetime>
      </property>
      <property name="minimumDateTime">
